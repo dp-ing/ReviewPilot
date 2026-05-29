@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx skills *)",
+      "WebSearch",
+      "Bash(ls \"C:\\\\\\\\Users\\\\\\\\22908\\\\\\\\.claude\\\\\\\\plugins\\\\\\\\marketplaces\\\\\\\\anthropic-agent-skills\\\\\\\\skills\\\\\\\\\")",
+      "Bash(ls \"C:\\\\\\\\Users\\\\\\\\22908\\\\\\\\.claude\\\\\\\\plugins\\\\\\\\marketplaces\\\\\\\\anthropic-agent-skills\\\\\\\\\")",
+      "Bash(ls \"C:\\\\\\\\Users\\\\\\\\22908\\\\\\\\.claude\\\\\\\\plugins\\\\\\\\marketplaces\\\\\\\\anthropic-agent-skills\\\\\\\\skills\\\\\\\\webapp-testing\\\\\\\\\")",
+      "Bash(ls \"C:\\\\\\\\Users\\\\\\\\22908\\\\\\\\.claude\\\\\\\\plugins\\\\\\\\marketplaces\\\\\\\\anthropic-agent-skills\\\\\\\\skills\\\\\\\\skill-creator\\\\\\\\\")"
+    ]
+  }
+}
