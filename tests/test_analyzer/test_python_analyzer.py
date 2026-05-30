@@ -1,8 +1,6 @@
-import pytest
-
 from app.analyzer.python_analyzer import PythonAnalyzer
 from app.analyzer.ast_base import ASTAnalyzer
-from app.analyzer.schemas import CodeStructure
+from app.analyzer.schemas import ASTResult, CodeStructure
 
 
 class TestPythonAnalyzer:
@@ -48,11 +46,6 @@ class TestPythonAnalyzer:
         assert result.imports == []
         assert result.functions == []
         assert result.classes == []
-
-    def test_analyze_file_not_implemented(self) -> None:
-        a = PythonAnalyzer()
-        with pytest.raises(NotImplementedError):
-            a.analyze_file("test.py", "x = 1")
 
     def test_extract_structure_calls(self) -> None:
         a = PythonAnalyzer()
@@ -189,3 +182,57 @@ class TestPythonAnalyzer:
         source = "x = 1\n"
         result = a.extract_structure("test.py", source)
         assert result.exception_blocks == []
+
+
+class TestExecEvalRule:
+    def test_detect_exec_call(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "exec(code)")
+        assert result.success
+        assert len(result.findings) == 1
+        f = result.findings[0]
+        assert f.rule_id == "python-exec-eval"
+        assert f.severity == "critical"
+        assert f.category == "security"
+        assert f.file_path == "test.py"
+
+    def test_detect_eval_call(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "eval(user_input)")
+        assert len(result.findings) == 1
+        assert result.findings[0].rule_id == "python-exec-eval"
+
+    def test_detect_both_exec_and_eval(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "exec(x)\neval(y)")
+        assert len(result.findings) == 2
+
+    def test_detect_exec_inside_function(self) -> None:
+        a = PythonAnalyzer()
+        source = "def f():\n    exec(data)\n"
+        result = a.analyze_file("test.py", source)
+        assert len(result.findings) == 1
+
+    def test_no_false_positive_on_safe_calls(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "print('hello')\nlen([1,2])\nint('42')")
+        assert len(result.findings) == 0
+
+    def test_no_false_positive_on_attributed_exec(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "os.exec('ls')")
+        assert len(result.findings) == 0
+
+    def test_analyze_file_returns_ast_result(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "x = 1")
+        assert isinstance(result, ASTResult)
+        assert result.language == "python"
+        assert result.success is True
+        assert result.structure is not None
+
+    def test_analyze_file_with_syntax_error(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "def broken(")
+        assert result.success is False
+        assert result.error_message is not None
