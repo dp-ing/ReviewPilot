@@ -61,6 +61,7 @@ class PythonAnalyzer(ASTAnalyzer):
         findings.extend(_HardcodedSecretDetector(filename).run(tree))
         findings.extend(_FileLeakDetector(filename).run(tree))
         findings.extend(_ComplexityDetector(filename).run(tree))
+        findings.extend(_FunctionLengthDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -569,6 +570,42 @@ class _ComplexityDetector(ast.NodeVisitor):
                     description=(
                         f"Cyclomatic complexity of {complexity} exceeds the threshold "
                         f"of {self._THRESHOLD}. Consider refactoring the function into "
+                        "smaller, more focused functions."
+                    ),
+                )
+            )
+        self.generic_visit(node)
+
+
+class _FunctionLengthDetector(ast.NodeVisitor):
+    """Detect functions longer than 50 lines — rule python-function-length."""
+
+    _MAX_LINES = 50
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        line_end = node.end_lineno or node.lineno
+        length = line_end - node.lineno + 1
+        if length > self._MAX_LINES:
+            self.findings.append(
+                ASTFinding(
+                    rule_id="python-function-length",
+                    severity="suggestion",
+                    category="style",
+                    file_path=self.filename,
+                    line_start=node.lineno,
+                    line_end=line_end,
+                    title=f"Function '{node.name}' is too long ({length} lines)",
+                    description=(
+                        f"Function length of {length} lines exceeds the limit of "
+                        f"{self._MAX_LINES}. Consider splitting the function into "
                         "smaller, more focused functions."
                     ),
                 )
