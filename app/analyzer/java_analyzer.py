@@ -112,6 +112,7 @@ class JavaAnalyzer(ASTAnalyzer):
         findings.extend(_JavaResourceLeakDetector(filename).run(tree_nodes))
         findings.extend(_JavaHardcodedSecretDetector(filename).run(tree_nodes))
         findings.extend(_JavaComplexityDetector(filename).run(tree_nodes))
+        findings.extend(_JavaMethodLengthDetector(filename).run(tree_nodes))
 
         return ASTResult(
             language="java",
@@ -397,6 +398,57 @@ class _JavaComplexityDetector:
                 if node.operator in ("&&", "||") and self._in_subtree(path, method_node):
                     count += 1
         return count
+
+    @staticmethod
+    def _in_subtree(path: Tuple[Any, ...], method_node: Any) -> bool:
+        for p in path:
+            if p is method_node:
+                return True
+        return False
+
+
+class _JavaMethodLengthDetector:
+    """Flag Java methods with too many lines — rule java-method-length."""
+
+    _THRESHOLD = 50
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
+        findings: list[ASTFinding] = []
+        for path, node in nodes:
+            if isinstance(node, (javalang.tree.MethodDeclaration, javalang.tree.ConstructorDeclaration)):
+                start_line = node.position.line if node.position else 1
+                max_line = self._max_line_in_subtree(nodes, node)
+                line_count = max_line - start_line
+                if line_count > self._THRESHOLD:
+                    findings.append(
+                        ASTFinding(
+                            rule_id="java-method-length",
+                            severity="suggestion",
+                            category="style",
+                            file_path=self.filename,
+                            line_start=start_line,
+                            line_end=max_line,
+                            title=f"Method '{node.name}' is too long ({line_count} lines)",
+                            description=(
+                                f"Method '{node.name}' spans {line_count} lines "
+                                f"(threshold: {self._THRESHOLD}). "
+                                "Consider breaking it into smaller methods."
+                            ),
+                        )
+                    )
+        return findings
+
+    def _max_line_in_subtree(self, nodes: list[Tuple[Any, Any]], method_node: Any) -> int:
+        max_line = 0
+        for path, node in nodes:
+            if self._in_subtree(path, method_node):
+                if node.position and node.position.line:
+                    if node.position.line > max_line:
+                        max_line = node.position.line
+        return max_line
 
     @staticmethod
     def _in_subtree(path: Tuple[Any, ...], method_node: Any) -> bool:
