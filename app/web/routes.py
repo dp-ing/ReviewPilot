@@ -7,6 +7,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.database import SessionLocal
+from app.models.repo_config import RepoConfig
+from app.models.repository import Repository
 from app.models.review_issue import ReviewIssue
 from app.models.review_record import ReviewRecord
 from app.web.auth import require_auth
@@ -193,5 +195,124 @@ async def update_issue_status(
             return JSONResponse({"error": "Not Found"}, status_code=404)
 
         return JSONResponse({"id": issue.id, "status": "ok"})
+    finally:
+        db.close()
+
+
+@router.get("/repos", response_class=HTMLResponse)
+async def repos_list(request: Request) -> HTMLResponse:
+    """List all connected repositories."""
+    user = require_auth(request)
+    if user is None:
+        return templates.TemplateResponse(
+            request=request, name="auth/login_prompt.html"
+        )
+
+    db = SessionLocal()
+    try:
+        repos = db.query(Repository).all()
+        repo_configs: dict[int, RepoConfig] = {}
+        review_counts: dict[int, int] = {}
+        for repo in repos:
+            config = (
+                db.query(RepoConfig)
+                .filter(RepoConfig.repository_id == repo.id)
+                .first()
+            )
+            if config:
+                repo_configs[repo.id] = config
+        return templates.TemplateResponse(
+            request=request,
+            name="repos/list.html",
+            context={
+                "user": user,
+                "repos": repos,
+                "repo_configs": repo_configs,
+                "review_counts": review_counts,
+            },
+        )
+    finally:
+        db.close()
+
+
+@router.get("/repos/{repo_id}/config", response_class=HTMLResponse)
+async def repo_config_page(
+    request: Request, repo_id: int, saved: bool = False
+) -> HTMLResponse:
+    """Repository configuration page."""
+    user = require_auth(request)
+    if user is None:
+        return templates.TemplateResponse(
+            request=request, name="auth/login_prompt.html"
+        )
+
+    db = SessionLocal()
+    try:
+        repo = db.query(Repository).filter(Repository.id == repo_id).first()
+        if repo is None:
+            return HTMLResponse("Not Found", status_code=404)
+
+        config = (
+            db.query(RepoConfig)
+            .filter(RepoConfig.repository_id == repo_id)
+            .first()
+        )
+        return templates.TemplateResponse(
+            request=request,
+            name="repos/config.html",
+            context={
+                "user": user,
+                "repo": repo,
+                "config": config,
+                "saved": saved,
+            },
+        )
+    finally:
+        db.close()
+
+
+@router.put("/api/repositories/{repo_id}/config")
+async def save_repo_config(
+    request: Request,
+    repo_id: int,
+) -> HTMLResponse:
+    """HTMX endpoint: save repository configuration."""
+    form_data: Any = await request.form()
+    auto_review = form_data.get("auto_review") == "1"
+    sensitivity_str = str(form_data.get("sensitivity", "medium"))
+    sensitivity_map: dict[str, float] = {"low": 0.9, "medium": 0.7, "high": 0.6}
+    confidence = sensitivity_map.get(sensitivity_str, 0.7)
+    enabled_categories_raw = form_data.getlist("enabled_categories")
+    enabled_categories: list[str] = [str(c) for c in enabled_categories_raw]
+    ignore_rule_ids_raw = str(form_data.get("ignore_rule_ids", ""))
+    ignore_rule_ids: list[str] = [
+        r.strip() for r in ignore_rule_ids_raw.split("\n") if r.strip()
+    ]
+
+    db = SessionLocal()
+    try:
+        config = (
+            db.query(RepoConfig)
+            .filter(RepoConfig.repository_id == repo_id)
+            .first()
+        )
+        if config is None:
+            config = RepoConfig(
+                repository_id=repo_id,
+                auto_review=auto_review,
+                confidence_threshold=confidence,
+                enabled_categories=enabled_categories,
+                ignore_rule_ids=ignore_rule_ids,
+            )
+            db.add(config)
+        else:
+            config.auto_review = auto_review
+            config.confidence_threshold = confidence
+            config.enabled_categories = enabled_categories
+            config.ignore_rule_ids = ignore_rule_ids
+        db.commit()
+        return HTMLResponse(
+            '<span class="text-green-600">✓ 配置已保存</span>'
+        )
     finally:
         db.close()

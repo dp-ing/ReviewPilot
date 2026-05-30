@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}ReviewPilot — 仓库管理{% endblock %}
+{% block nav_repos %}bg-gray-100 font-medium{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">仓库管理</h2>
+    <p class="text-gray-500 mt-1">管理已接入的 GitHub 仓库</p>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">仓库</th>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">自动评审</th>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">评审次数</th>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for repo in repos %}
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="px-4 py-3">
+                    <a href="{{ repo.html_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        {{ repo.full_name }}
+                    </a>
+                </td>
+                <td class="px-4 py-3">
+                    {% set config = repo_configs.get(repo.id) %}
+                    {% if config and config.auto_review %}
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">已启用</span>
+                    {% else %}
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">未启用</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">{{ review_counts.get(repo.id, 0) }}</td>
+                <td class="px-4 py-3">
+                    <a href="/repos/{{ repo.id }}/config" class="text-sm text-blue-600 hover:text-blue-800">配置</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="px-4 py-12 text-center text-gray-400">
+                    <div class="text-4xl mb-2">📦</div>
+                    <p>暂无已连接的仓库</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
