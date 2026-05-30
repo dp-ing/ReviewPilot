@@ -497,3 +497,19 @@ class TestComplexityRule:
         result = a.analyze_file("test.py", source)
         findings = [f for f in result.findings if f.rule_id == "python-complexity"]
         assert len(findings) == 0
+
+
+class TestFunctionLengthRule:
+    def test_detect_long_function(self) -> None:
+        a = PythonAnalyzer()
+        lines = ["def long_fn():"] + [f"    x{i} = {i}" for i in range(55)]
+        source = "\n".join(lines)
+        result = a.analyze_file("test.py", source)
+        assert any(f.rule_id == "python-function-length" for f in result.findings)
+
+    def test_no_alert_on_short_function(self) -> None:
+        a = PythonAnalyzer()
+        source = "def short():\n    return 1\n"
+        result = a.analyze_file("test.py", source)
+        findings = [f for f in result.findings if f.rule_id == "python-function-length"]
+        assert len(findings) == 0
