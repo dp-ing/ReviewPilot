@@ -420,3 +420,40 @@ class TestJavaComplexityRule:
         result = a.analyze_file("App.java", source)
         findings = [f for f in result.findings if f.rule_id == "java-complexity"]
         assert len(findings) == 0
+
+
+class TestJavaMethodLengthRule:
+    def test_detect_long_method(self) -> None:
+        a = JavaAnalyzer()
+        lines = ["public class App {", "    public void longMethod() {"]
+        for i in range(55):
+            lines.append(f'        System.out.println("line {i}");')
+        lines.append("    }")
+        lines.append("}")
+        source = "\n".join(lines)
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-method-length" for f in result.findings)
+
+    def test_no_alert_on_short_function(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public int add(int a, int b) {\n"
+            "        return a + b;\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-method-length"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_empty_function(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void empty() {}\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-method-length"]
+        assert len(findings) == 0
