@@ -513,3 +513,97 @@ class TestFunctionLengthRule:
         result = a.analyze_file("test.py", source)
         findings = [f for f in result.findings if f.rule_id == "python-function-length"]
         assert len(findings) == 0
+
+
+class TestPythonAnalyzerIntegration:
+    """Integration tests scanning a complete Python file with multiple issues."""
+
+    _FULL_SOURCE = """# my_script.py
+import os
+import pickle
+import sqlite3
+
+PASSWORD = "my_secret_pass_123"
+
+def process_user_input(user_input):
+    exec(user_input)
+    result = eval("1 + 1")
+    data = pickle.loads(user_input)
+    os.system("rm -rf /")
+    conn = sqlite3.connect(":memory:")
+    conn.execute("SELECT * FROM users WHERE name = '" + user_input + "'")
+    f = open("output.txt")
+    f.write(data)
+    return result
+
+def safe_function():
+    try:
+        x = 1 / 0
+    except ZeroDivisionError:
+        pass
+    with open("config.json") as f:
+        return f.read()
+"""
+
+    def test_integration_finds_exec_eval(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        rule_ids = {f.rule_id for f in result.findings}
+        assert "python-exec-eval" in rule_ids
+
+    def test_integration_finds_unsafe_pickle(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        rule_ids = {f.rule_id for f in result.findings}
+        assert "python-unsafe-pickle" in rule_ids
+
+    def test_integration_finds_shell_injection(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        rule_ids = {f.rule_id for f in result.findings}
+        assert "python-shell-injection" in rule_ids
+
+    def test_integration_finds_sql_concat(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        rule_ids = {f.rule_id for f in result.findings}
+        assert "python-sql-concat" in rule_ids
+
+    def test_integration_finds_hardcoded_secret(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        rule_ids = {f.rule_id for f in result.findings}
+        assert "python-hardcoded-secret" in rule_ids
+
+    def test_integration_finds_file_leak(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        rule_ids = {f.rule_id for f in result.findings}
+        assert "python-file-leak" in rule_ids
+
+    def test_integration_no_bare_except_on_safe_function(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        # safe_function uses typed except, so bare-except should not fire
+        findings = [f for f in result.findings if f.rule_id == "python-bare-except"]
+        assert len(findings) == 0
+
+    def test_integration_structure_extracted(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        assert result.structure is not None
+        assert result.structure.language == "python"
+        assert len(result.structure.functions) >= 2
+        assert "os" in result.structure.imports
+
+    def test_integration_all_findings_have_required_fields(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("my_script.py", self._FULL_SOURCE)
+        for f in result.findings:
+            assert f.rule_id
+            assert f.severity in ("critical", "warning", "suggestion")
+            assert f.category
+            assert f.file_path == "my_script.py"
+            assert f.line_start > 0
+            assert f.title
+            assert f.description
