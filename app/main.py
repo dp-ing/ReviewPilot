@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from app.bot.event_router import EventRouter
 from app.core.config import get_config
 from app.core.database import init_db
 from app.core.logging import get_logger
+from app.github.webhook import verify_signature
 
 logger = get_logger(__name__)
 
@@ -29,7 +31,29 @@ app = FastAPI(
 
 config = get_config()
 
+event_router = EventRouter()
+
 
 @app.get("/health", response_class=JSONResponse)
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/webhook/github")
+async def webhook_github(request: Request) -> JSONResponse:
+    """Handle incoming GitHub webhook events."""
+    signature = request.headers.get("X-Hub-Signature-256", "")
+    body_bytes = await request.body()
+
+    if not verify_signature(body_bytes, signature):
+        return JSONResponse(
+            status_code=401, content={"error": "Invalid signature"}
+        )
+
+    payload: dict[str, object] = await request.json()
+    event_type = request.headers.get("X-GitHub-Event", "")
+
+    response = event_router.handle_webhook(event_type, payload, signature)
+    return JSONResponse(
+        status_code=response.status_code, content=response.body
+    )
