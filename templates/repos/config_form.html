@@ -1,0 +1,53 @@
+{# config_form.html — repository configuration form #}
+<div class="bg-white rounded-xl border border-gray-200 p-6">
+    <form hx-put="/api/repositories/{{ repo.id }}/config" hx-target="#form-result" method="post">
+        <div class="mb-6">
+            <label class="flex items-center gap-3">
+                <input type="checkbox" name="auto_review" value="1"
+                       {% if config and config.auto_review %}checked{% endif %}
+                       class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <div>
+                    <div class="text-sm font-medium text-gray-900">自动评审</div>
+                    <div class="text-xs text-gray-500">开启后，新 PR 将自动触发 AI 评审</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-900 mb-2">敏感度级别</label>
+            <select name="sensitivity" class="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                <option value="low" {% if config and config.sensitivity == "low" %}selected{% endif %}>低 — 仅报告高置信度问题</option>
+                <option value="medium" {% if config and config.sensitivity == "medium" %}selected{% endif %}>中 — 平衡检测</option>
+                <option value="high" {% if not config or config.sensitivity == "high" %}selected{% endif %}>高 — 报告所有可疑问题</option>
+            </select>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-900 mb-2">启用类别</label>
+            <div class="flex flex-wrap gap-3">
+                {% for cat in ["security", "logic", "performance", "style"] %}
+                <label class="flex items-center gap-1.5">
+                    <input type="checkbox" name="enabled_categories" value="{{ cat }}"
+                           {% if not config or cat in (config.enabled_categories or ["security", "logic", "performance", "style"]) %}checked{% endif %}
+                           class="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm text-gray-700">
+                        {% if cat == "security" %}🔒 安全{% elif cat == "logic" %}🧠 逻辑{% elif cat == "performance" %}⚡ 性能{% else %}🎨 风格{% endif %}
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-900 mb-2">忽略规则 ID（每行一个）</label>
+            <textarea name="ignore_rule_ids" rows="3"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500">{{ config.ignore_rule_ids|join('\n') if config and config.ignore_rule_ids else "" }}</textarea>
+        </div>
+
+        <button type="submit" class="px-5 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors">
+            保存配置
+        </button>
+
+        <span id="form-result" class="ml-3 text-sm"></span>
+    </form>
+</div>

@@ -1,0 +1,22 @@
+{# issue_row.html — single issue row with HTMX status toggle #}
+<div class="px-6 py-4 flex items-start gap-4" id="issue-{{ issue.id }}">
+    <div class="flex-shrink-0 mt-0.5">
+        {% include "shared/severity_badge.html" with context %}
+    </div>
+    <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h4 class="text-sm font-semibold text-gray-900">{{ issue.title }}</h4>
+                <p class="text-sm text-gray-600 mt-1">{{ issue.description }}</p>
+                {% if issue.suggestion %}
+                <pre class="mt-2 p-3 bg-gray-50 rounded-lg text-xs overflow-x-auto"><code>{{ issue.suggestion }}</code></pre>
+                {% endif %}
+                <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                    <span>{{ issue.file_path }}:{{ issue.line_start }}</span>
+                    <span>{{ issue.category }}</span>
+                    <span>置信度 {{ (issue.confidence * 100)|int }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

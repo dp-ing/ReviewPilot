@@ -1,0 +1,39 @@
+{# pagination.html — page navigation component #}
+{% if total_pages > 1 %}
+<nav class="flex items-center justify-between mt-6">
+    <div class="text-sm text-gray-500">
+        第 {{ page }} / {{ total_pages }} 页，共 {{ total }} 条
+    </div>
+    <div class="flex items-center gap-2">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}&{{ query_string }}" class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+            上一页
+        </a>
+        {% else %}
+        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-300 cursor-not-allowed">
+            上一页
+        </span>
+        {% endif %}
+
+        {% for p in page_range %}
+            {% if p == page %}
+            <span class="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-sm font-medium">{{ p }}</span>
+            {% elif p == "..." %}
+            <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+            {% else %}
+            <a href="?page={{ p }}&{{ query_string }}" class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}&{{ query_string }}" class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+            下一页
+        </a>
+        {% else %}
+        <span class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-300 cursor-not-allowed">
+            下一页
+        </span>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

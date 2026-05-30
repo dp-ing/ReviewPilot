@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}ReviewPilot — 评审记录{% endblock %}
+{% block nav_reviews %}bg-gray-100 font-medium{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">评审记录</h2>
+    <p class="text-gray-500 mt-1">查看所有 PR 的 AI 评审历史</p>
+</div>
+
+{% include "shared/filter_bar.html" with context %}
+
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">PR</th>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">仓库</th>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">状态</th>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">问题</th>
+                <th class="text-left px-4 py-3 text-sm font-medium text-gray-500">时间</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="px-4 py-3">
+                    <a href="/reviews/{{ record.id }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        #{{ record.pull_request.pr_number }} {{ record.pull_request.title[:60] }}
+                    </a>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                    {{ record.pull_request.repository.full_name }}
+                </td>
+                <td class="px-4 py-3">
+                    {% if record.status.value == "completed" %}
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">已完成</span>
+                    {% elif record.status.value == "pending" %}
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">进行中</span>
+                    {% else %}
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">失败</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                    {% if record.total_issues > 0 %}
+                    🔴 {{ record.critical_count }} 🟠 {{ record.warning_count }} ⚪ {{ record.suggestion_count }}
+                    {% else %}
+                    <span class="text-gray-400">--</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500">
+                    {{ record.started_at.strftime("%Y-%m-%d %H:%M") if record.started_at else "--" }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="px-4 py-12 text-center text-gray-400">
+                    <div class="text-4xl mb-2">📋</div>
+                    <p>暂无评审记录</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include "shared/pagination.html" with context %}
+{% endblock %}

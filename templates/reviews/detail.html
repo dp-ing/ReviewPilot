@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}ReviewPilot — 评审详情{% endblock %}
+{% block nav_reviews %}bg-gray-100 font-medium{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <a href="/reviews" class="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block">← 返回列表</a>
+    <h2 class="text-2xl font-bold text-gray-900">评审详情</h2>
+    <div class="flex items-center gap-4 mt-2 text-sm text-gray-500">
+        <span>PR #{{ record.pull_request.pr_number }}</span>
+        <span>{{ record.pull_request.repository.full_name }}</span>
+        <span>{{ record.pull_request.title }}</span>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="text-sm text-gray-500">总问题数</div>
+        <div class="text-2xl font-bold text-gray-900">{{ record.total_issues }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="text-sm text-gray-500">🔴 Critical</div>
+        <div class="text-2xl font-bold text-red-600">{{ record.critical_count }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="text-sm text-gray-500">🟠 Warning</div>
+        <div class="text-2xl font-bold text-orange-600">{{ record.warning_count }}</div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="text-sm text-gray-500">⚪ Suggestion</div>
+        <div class="text-2xl font-bold text-gray-600">{{ record.suggestion_count }}</div>
+    </div>
+</div>
+
+{% if record.summary %}
+<div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">AI 总结</h3>
+    <div class="prose prose-sm text-gray-700">{{ record.summary }}</div>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">发现的问题</h3>
+    </div>
+    <div class="divide-y divide-gray-100" id="issue-list">
+        {% for issue in issues %}
+        {% include "reviews/issue_row.html" with context %}
+        {% else %}
+        <div class="px-6 py-12 text-center text-gray-400">
+            <div class="text-4xl mb-2">✅</div>
+            <p>未发现问题</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
