@@ -270,3 +270,52 @@ class TestUnsafePickleRule:
         a = PythonAnalyzer()
         result = a.analyze_file("test.py", "import pickle\nx = pickle.HIGHEST_PROTOCOL")
         assert len(result.findings) == 0
+
+
+class TestShellInjectionRule:
+    def test_detect_os_system(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "os.system(cmd)")
+        assert len(result.findings) == 1
+        f = result.findings[0]
+        assert f.rule_id == "python-shell-injection"
+        assert f.severity == "critical"
+        assert f.category == "security"
+
+    def test_detect_os_popen(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "os.popen(cmd)")
+        assert any(f.rule_id == "python-shell-injection" for f in result.findings)
+
+    def test_detect_subprocess_call_shell_true(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "subprocess.call(cmd, shell=True)")
+        assert any(f.rule_id == "python-shell-injection" for f in result.findings)
+
+    def test_detect_subprocess_run_shell_true(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "subprocess.run(cmd, shell=True)")
+        assert any(f.rule_id == "python-shell-injection" for f in result.findings)
+
+    def test_detect_subprocess_popen_shell_true(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "subprocess.Popen(cmd, shell=True)")
+        assert any(f.rule_id == "python-shell-injection" for f in result.findings)
+
+    def test_no_alert_on_subprocess_without_shell(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "subprocess.run(['ls', '-la'])")
+        findings = [f for f in result.findings if f.rule_id == "python-shell-injection"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_subprocess_shell_false(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "subprocess.call(cmd, shell=False)")
+        findings = [f for f in result.findings if f.rule_id == "python-shell-injection"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_safe_calls(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "os.path.join('/a', 'b')\nos.getcwd()")
+        findings = [f for f in result.findings if f.rule_id == "python-shell-injection"]
+        assert len(findings) == 0
