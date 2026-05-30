@@ -142,3 +142,84 @@ class TestJavaUnsafeDeserialRule:
         result = a.analyze_file("App.java", source)
         findings = [f for f in result.findings if f.rule_id == "java-unsafe-deserial"]
         assert len(findings) == 0
+
+
+class TestJavaSQLConcatRule:
+    def test_detect_execute_query_with_concat(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.sql.Statement;\n"
+            "public class App {\n"
+            "    public void query(Statement stmt, String user) throws Exception {\n"
+            "        stmt.executeQuery(\"SELECT * FROM users WHERE name = '\" + user + \"'\");\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-sql-concat" for f in result.findings)
+
+    def test_detect_execute_update_with_concat(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.sql.Statement;\n"
+            "public class App {\n"
+            "    public void update(Statement stmt, String name) throws Exception {\n"
+            "        stmt.executeUpdate(\"DELETE FROM users WHERE name = '\" + name + \"'\");\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-sql-concat" for f in result.findings)
+
+    def test_detect_execute_with_concat(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.sql.Statement;\n"
+            "public class App {\n"
+            "    public void run(Statement stmt, String tbl) throws Exception {\n"
+            "        stmt.execute(\"DROP TABLE \" + tbl);\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-sql-concat" for f in result.findings)
+
+    def test_detect_add_batch_with_concat(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.sql.Statement;\n"
+            "public class App {\n"
+            "    public void batch(Statement stmt, String val) throws Exception {\n"
+            "        stmt.addBatch(\"INSERT INTO t VALUES ('\" + val + \"')\");\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-sql-concat" for f in result.findings)
+
+    def test_no_alert_on_static_query(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.sql.Statement;\n"
+            "public class App {\n"
+            "    public void query(Statement stmt) throws Exception {\n"
+            "        stmt.executeQuery(\"SELECT * FROM users\");\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-sql-concat"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_safe_call(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void run() {\n"
+            "        System.out.println(\"hello\");\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-sql-concat"]
+        assert len(findings) == 0
