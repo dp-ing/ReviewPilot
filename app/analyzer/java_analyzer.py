@@ -109,6 +109,7 @@ class JavaAnalyzer(ASTAnalyzer):
         findings.extend(_JavaCommandInjectionDetector(filename).run(tree_nodes))
         findings.extend(_JavaUnsafeDeserialDetector(filename).run(tree_nodes))
         findings.extend(_JavaSQLConcatDetector(filename).run(tree_nodes))
+        findings.extend(_JavaResourceLeakDetector(filename).run(tree_nodes))
 
         return ASTResult(
             language="java",
@@ -242,4 +243,49 @@ class _JavaSQLConcatDetector:
             for _, child in arg:
                 if isinstance(child, javalang.tree.BinaryOperation) and child.operator == "+":
                     return True
+        return False
+
+
+class _JavaResourceLeakDetector:
+    """Detect resource creation without try-with-resources — rule java-resource-leak."""
+
+    _RESOURCE_TYPES = {
+        "FileInputStream", "FileOutputStream", "FileReader", "FileWriter",
+        "BufferedReader", "BufferedWriter", "InputStreamReader",
+        "OutputStreamWriter", "PrintWriter", "PrintStream",
+        "Socket", "ServerSocket",
+    }
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
+        findings: list[ASTFinding] = []
+        for path, node in nodes:
+            if isinstance(node, javalang.tree.ClassCreator) and node.type:
+                type_name = node.type.name
+                if type_name in self._RESOURCE_TYPES and not self._in_try_resource(path):
+                    findings.append(
+                        ASTFinding(
+                            rule_id="java-resource-leak",
+                            severity="warning",
+                            category="best_practice",
+                            file_path=self.filename,
+                            line_start=node.position.line if node.position else 1,
+                            line_end=node.position.line if node.position else 1,
+                            title="Resource opened without try-with-resources",
+                            description=(
+                                "Opening a resource outside of try-with-resources "
+                                "may lead to resource leaks. Use try-with-resources "
+                                "to ensure the resource is properly closed."
+                            ),
+                        )
+                    )
+        return findings
+
+    @staticmethod
+    def _in_try_resource(path: Tuple[Any, ...]) -> bool:
+        for p in path:
+            if isinstance(p, javalang.tree.TryResource):
+                return True
         return False
