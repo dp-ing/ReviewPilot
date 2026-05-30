@@ -1,0 +1,56 @@
+## Task: Phase 2 — Code Style & Best Practices Analysis
+
+Analyze the following code changes for **style and best practice issues**.
+
+### Context
+- **PR Title**: {{ pr_title }}
+- **Phase 1 Summary**: {{ phase1_summary }}
+
+### Changed Code
+{% for file_path, content in files.items() %}
+#### `{{ file_path }}`
+```{{ language | default('text') }}
+{{ content }}
+```
+{% endfor %}
+
+### AST Structure
+{% if ast_structure %}
+Changed functions:
+{% for func in ast_structure.functions %}
+- `{{ func.name }}`: {{ func.lines_of_code if func.lines_of_code else 'unknown' }} lines, complexity {{ func.complexity }}
+{% endfor %}
+{% endif %}
+
+## Instructions
+
+Focus on these style categories:
+1. **Naming**: Poor variable/function/class names, inconsistent conventions
+2. **Code Organization**: Overly long functions, deep nesting, god classes, poor cohesion
+3. **Duplication**: Copy-pasted code, redundant logic, violation of DRY
+4. **Comments & Documentation**: Missing or outdated comments, TODO markers
+5. **Error Messages**: Unhelpful error messages, missing context
+6. **Testing**: Missing test coverage for changed paths, untestable code
+7. **SOLID Principles**: Single responsibility violations, tight coupling
+8. **Language Idioms**: Non-idiomatic code, unused imports, deprecated APIs
+
+Respond with a JSON object containing a `findings` array:
+
+```json
+{
+  "findings": [
+    {
+      "rule_id": "ai-style-{category}",
+      "severity": "critical|warning|suggestion",
+      "category": "style",
+      "file_path": "string",
+      "line_start": 0,
+      "line_end": 0,
+      "title": "short summary",
+      "description": "detailed explanation",
+      "suggestion": "how to fix",
+      "confidence": 0.0
+    }
+  ]
+}
+```
