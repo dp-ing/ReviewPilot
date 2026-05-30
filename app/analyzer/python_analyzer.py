@@ -57,6 +57,7 @@ class PythonAnalyzer(ASTAnalyzer):
         findings.extend(_UnsafePickleDetector(filename).run(tree))
         findings.extend(_ShellInjectionDetector(filename).run(tree))
         findings.extend(_SQLConcatDetector(filename).run(tree))
+        findings.extend(_BareExceptDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -392,3 +393,36 @@ class _SQLConcatDetector(ast.NodeVisitor):
         if isinstance(node, ast.JoinedStr):
             return bool(node.values)
         return False
+
+
+class _BareExceptDetector(ast.NodeVisitor):
+    """Detect bare except clauses — rule python-bare-except."""
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        if node.type is None:
+            self.findings.append(
+                ASTFinding(
+                    rule_id="python-bare-except",
+                    severity="warning",
+                    category="best_practice",
+                    file_path=self.filename,
+                    line_start=node.lineno,
+                    line_end=node.end_lineno or node.lineno,
+                    title="Bare except clause",
+                    description=(
+                        "A bare except: clause catches all exceptions including "
+                        "KeyboardInterrupt and SystemExit, which can make debugging "
+                        "difficult and prevent graceful shutdown. Specify the "
+                        "exception type(s) to catch."
+                    ),
+                )
+            )
+        self.generic_visit(node)
