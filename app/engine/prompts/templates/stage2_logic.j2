@@ -1,0 +1,56 @@
+## Task: Phase 2 — Logic & Correctness Analysis
+
+Analyze the following code changes for **logic errors and correctness issues**.
+
+### Context
+- **PR Title**: {{ pr_title }}
+- **Phase 1 Summary**: {{ phase1_summary }}
+
+### Changed Code (logic-relevant files)
+{% for file_path, content in files.items() %}
+#### `{{ file_path }}`
+```{{ language | default('text') }}
+{{ content }}
+```
+{% endfor %}
+
+### AST Structure
+{% if ast_structure %}
+Functions in changed files:
+{% for func in ast_structure.functions %}
+- `{{ func.name }}` (lines {{ func.line_start }}-{{ func.line_end }}, complexity: {{ func.complexity }})
+{% endfor %}
+{% endif %}
+
+## Instructions
+
+Focus on these logic categories:
+1. **Null/Undefined Handling**: Missing null checks, potential NPE
+2. **Edge Cases**: Empty collections, boundary values, off-by-one errors
+3. **Control Flow**: Unreachable code, infinite loops, missing return, incorrect conditions
+4. **Type Safety**: Type mismatches, unsafe casts, lossy conversions
+5. **State Management**: Race conditions, inconsistent state, missing synchronization
+6. **Error Handling**: Swallowed exceptions, missing error propagation, incorrect recovery
+7. **API Contracts**: Breaking changes, missing validation, incorrect parameter handling
+8. **Concurrency**: Thread safety, deadlocks, atomicity violations
+
+Respond with a JSON object containing a `findings` array:
+
+```json
+{
+  "findings": [
+    {
+      "rule_id": "ai-logic-{category}",
+      "severity": "critical|warning|suggestion",
+      "category": "logic",
+      "file_path": "string",
+      "line_start": 0,
+      "line_end": 0,
+      "title": "short summary",
+      "description": "detailed explanation",
+      "suggestion": "how to fix",
+      "confidence": 0.0
+    }
+  ]
+}
+```
