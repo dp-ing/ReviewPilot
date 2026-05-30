@@ -58,6 +58,7 @@ class PythonAnalyzer(ASTAnalyzer):
         findings.extend(_ShellInjectionDetector(filename).run(tree))
         findings.extend(_SQLConcatDetector(filename).run(tree))
         findings.extend(_BareExceptDetector(filename).run(tree))
+        findings.extend(_HardcodedSecretDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -426,3 +427,63 @@ class _BareExceptDetector(ast.NodeVisitor):
                 )
             )
         self.generic_visit(node)
+
+
+_SECRET_PATTERNS = ("password", "passwd", "secret", "api_key", "apikey", "token", "private_key")
+_SECRET_TEST_VALUES = {"test_password", "example_key", "your_api_key", "xxx", "secret_here", "changeme", "changethis", "placeholder"}
+
+
+class _HardcodedSecretDetector(ast.NodeVisitor):
+    """Detect hardcoded secrets — rule python-hardcoded-secret."""
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        if not isinstance(node.value, ast.Constant) or not isinstance(node.value.value, str):
+            self.generic_visit(node)
+            return
+        if not node.value.value.strip():
+            self.generic_visit(node)
+            return
+
+        val_lower = node.value.value.strip().lower()
+        if val_lower in _SECRET_TEST_VALUES:
+            self.generic_visit(node)
+            return
+
+        for target in node.targets:
+            name = self._target_name(target)
+            name_lower = name.lower()
+            if any(p in name_lower for p in _SECRET_PATTERNS):
+                self.findings.append(
+                    ASTFinding(
+                        rule_id="python-hardcoded-secret",
+                        severity="warning",
+                        category="security",
+                        file_path=self.filename,
+                        line_start=node.lineno,
+                        line_end=node.end_lineno or node.lineno,
+                        title=f"Hardcoded secret in variable '{name}'",
+                        description=(
+                            "Hardcoded credentials or secrets in source code can be "
+                            "exposed in version control. Use environment variables "
+                            "or a secrets manager instead."
+                        ),
+                    )
+                )
+                break
+        self.generic_visit(node)
+
+    @staticmethod
+    def _target_name(node: ast.expr) -> str:
+        if isinstance(node, ast.Name):
+            return node.id
+        if isinstance(node, ast.Attribute):
+            return node.attr
+        return ""
