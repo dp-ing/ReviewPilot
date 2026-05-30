@@ -12,6 +12,7 @@ from app.models.repository import Repository
 from app.models.review_issue import ReviewIssue
 from app.models.review_record import ReviewRecord
 from app.web.auth import require_auth
+from app.web.enhanced_view import EnhancedViewBuilder
 from app.web.stats_service import StatsService
 
 router = APIRouter(tags=["pages"])
@@ -313,6 +314,42 @@ async def save_repo_config(
         db.commit()
         return HTMLResponse(
             '<span class="text-green-600">✓ 配置已保存</span>'
+        )
+    finally:
+        db.close()
+
+
+@router.get("/reviews/{review_id}/enhanced", response_class=HTMLResponse)
+async def review_enhanced(request: Request, review_id: int) -> HTMLResponse:
+    """Enhanced review detail with issues grouped by file."""
+    user = require_auth(request)
+    if user is None:
+        return templates.TemplateResponse(
+            request=request, name="auth/login_prompt.html"
+        )
+
+    db = SessionLocal()
+    try:
+        record = db.query(ReviewRecord).filter(ReviewRecord.id == review_id).first()
+        if record is None:
+            return HTMLResponse("Not Found", status_code=404)
+
+        issues = (
+            db.query(ReviewIssue)
+            .filter(ReviewIssue.review_record_id == review_id)
+            .all()
+        )
+
+        builder = EnhancedViewBuilder()
+        view_data = builder.build(record, issues)
+
+        return templates.TemplateResponse(
+            request=request,
+            name="reviews/enhanced.html",
+            context={
+                "user": user,
+                "view_data": view_data,
+            },
         )
     finally:
         db.close()
