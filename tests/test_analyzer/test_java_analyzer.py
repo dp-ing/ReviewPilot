@@ -223,3 +223,62 @@ class TestJavaSQLConcatRule:
         result = a.analyze_file("App.java", source)
         findings = [f for f in result.findings if f.rule_id == "java-sql-concat"]
         assert len(findings) == 0
+
+
+class TestJavaResourceLeakRule:
+    def test_detect_file_input_stream_without_try_resource(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.io.FileInputStream;\n"
+            "public class App {\n"
+            "    public void read() throws Exception {\n"
+            "        FileInputStream fis = new FileInputStream(\"data.txt\");\n"
+            "        int b = fis.read();\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-resource-leak" for f in result.findings)
+
+    def test_detect_file_reader_without_try_resource(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.io.FileReader;\n"
+            "public class App {\n"
+            "    public void read() throws Exception {\n"
+            "        FileReader fr = new FileReader(\"data.txt\");\n"
+            "        fr.read();\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-resource-leak" for f in result.findings)
+
+    def test_no_alert_on_try_with_resources(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.io.FileInputStream;\n"
+            "public class App {\n"
+            "    public void read() throws Exception {\n"
+            "        try (FileInputStream fis = new FileInputStream(\"data.txt\")) {\n"
+            "            int b = fis.read();\n"
+            "        }\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-resource-leak"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_safe_call(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void run() {\n"
+            "        String s = new String(\"hello\");\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-resource-leak"]
+        assert len(findings) == 0
