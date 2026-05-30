@@ -1,0 +1,63 @@
+## Task: Phase 2 — Security Analysis
+
+Analyze the following code changes for **security vulnerabilities**.
+
+### Context
+- **PR Title**: {{ pr_title }}
+- **Phase 1 Summary**: {{ phase1_summary }}
+- **Risk Level**: {{ risk_level }}
+
+### Changed Code (security-relevant files)
+{% for file_path, content in files.items() %}
+#### `{{ file_path }}`
+```{{ language | default('text') }}
+{{ content }}
+```
+{% endfor %}
+
+### AST Analysis Results
+{% if ast_findings %}
+The deterministic AST analyzer found the following:
+{% for finding in ast_findings %}
+- [{{ finding.severity | upper }}] {{ finding.rule_id }}: {{ finding.title }} ({{ finding.file_path }}:{{ finding.line_start }})
+{% endfor %}
+{% else %}
+No deterministic security findings from AST analysis.
+{% endif %}
+
+## Instructions
+
+Focus on these security categories:
+1. **Injection**: SQL, command, code, XSS, path traversal
+2. **Authentication & Authorization**: Missing checks, privilege escalation
+3. **Data Exposure**: Hardcoded secrets, sensitive data in logs, insecure storage
+4. **Cryptography**: Weak algorithms, improper key management, insecure random
+5. **Input Validation**: Missing validation, unsafe deserialization, type confusion
+6. **Session & Token Management**: Insecure cookies, token leakage, missing expiration
+
+For each finding, provide:
+- Specific file path and line numbers
+- Clear description of the vulnerability
+- Concrete fix suggestion
+- Confidence score (0.0-1.0)
+
+Respond with a JSON object containing a `findings` array:
+
+```json
+{
+  "findings": [
+    {
+      "rule_id": "ai-security-{category}",
+      "severity": "critical|warning|suggestion",
+      "category": "security",
+      "file_path": "string",
+      "line_start": 0,
+      "line_end": 0,
+      "title": "short summary",
+      "description": "detailed explanation",
+      "suggestion": "how to fix",
+      "confidence": 0.0
+    }
+  ]
+}
+```

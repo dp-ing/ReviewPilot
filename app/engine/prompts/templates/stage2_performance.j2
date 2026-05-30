@@ -1,0 +1,48 @@
+## Task: Phase 2 — Performance Analysis
+
+Analyze the following code changes for **performance issues**.
+
+### Context
+- **PR Title**: {{ pr_title }}
+- **Phase 1 Summary**: {{ phase1_summary }}
+
+### Changed Code
+{% for file_path, content in files.items() %}
+#### `{{ file_path }}`
+```{{ language | default('text') }}
+{{ content }}
+```
+{% endfor %}
+
+## Instructions
+
+Focus on these performance categories:
+1. **Algorithm Complexity**: Inefficient algorithms, O(n^2) where O(n) is possible
+2. **Database Queries**: N+1 queries, missing indexes, full table scans, inefficient joins
+3. **Memory**: Unnecessary allocations, memory leaks, large object retention, inefficient collections
+4. **I/O**: Blocking I/O in hot paths, unbuffered streams, excessive file operations
+5. **Network**: Chatty APIs, missing caching, redundant requests, large payloads
+6. **Caching**: Missing cache opportunities, stale cache risks
+7. **Resource Management**: Connection pooling, resource cleanup, thread pool usage
+8. **Startup/Latency**: Slow initialization, blocking operations in critical paths
+
+Respond with a JSON object containing a `findings` array:
+
+```json
+{
+  "findings": [
+    {
+      "rule_id": "ai-performance-{category}",
+      "severity": "critical|warning|suggestion",
+      "category": "performance",
+      "file_path": "string",
+      "line_start": 0,
+      "line_end": 0,
+      "title": "short summary",
+      "description": "detailed explanation",
+      "suggestion": "how to fix",
+      "confidence": 0.0
+    }
+  ]
+}
+```
