@@ -1,0 +1,37 @@
+{# filter_bar.html — reusable filter bar for record/repo lists #}
+<form class="flex flex-wrap items-center gap-3 mb-6" method="get">
+    {% if show_status_filter|default(True) %}
+    <select name="status" class="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">全部状态</option>
+        <option value="pending" {% if current_status == "pending" %}selected{% endif %}>进行中</option>
+        <option value="completed" {% if current_status == "completed" %}selected{% endif %}>已完成</option>
+        <option value="failed" {% if current_status == "failed" %}selected{% endif %}>失败</option>
+    </select>
+    {% endif %}
+
+    {% if show_repo_filter|default(False) %}
+    <select name="repo" class="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">全部仓库</option>
+        {% for repo in repos %}
+        <option value="{{ repo.full_name }}" {% if current_repo == repo.full_name %}selected{% endif %}>{{ repo.full_name }}</option>
+        {% endfor %}
+    </select>
+    {% endif %}
+
+    {% if show_date_filter|default(False) %}
+    <input type="date" name="date_from" value="{{ date_from|default('') }}"
+           class="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+           placeholder="开始日期">
+    <span class="text-gray-400 text-sm">至</span>
+    <input type="date" name="date_to" value="{{ date_to|default('') }}"
+           class="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+           placeholder="结束日期">
+    {% endif %}
+
+    <button type="submit" class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors">
+        筛选
+    </button>
+    {% if has_active_filters|default(False) %}
+    <a href="?" class="text-sm text-gray-500 hover:text-gray-700">清除筛选</a>
+    {% endif %}
+</form>

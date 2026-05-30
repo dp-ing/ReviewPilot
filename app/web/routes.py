@@ -20,5 +20,7 @@ async def index(request: Request) -> HTMLResponse:
             request=request, name="auth/login_prompt.html"
         )
     return templates.TemplateResponse(
-        request=request, name="index.html", context={"user": user}
+        request=request,
+        name="index.html",
+        context={"user": user, "stats": {}},
     )
