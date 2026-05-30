@@ -457,3 +457,95 @@ class TestJavaMethodLengthRule:
         result = a.analyze_file("App.java", source)
         findings = [f for f in result.findings if f.rule_id == "java-method-length"]
         assert len(findings) == 0
+
+
+_INTEGRATION_JAVA_SOURCE = r"""
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+import java.sql.Statement;
+
+public class UserService extends BaseService implements Serializable {
+
+    private String password = "SuperSecret123!";
+
+    public void process(String userInput, Statement stmt) throws Exception {
+        Runtime.getRuntime().exec(userInput);
+
+        stmt.executeQuery("SELECT * FROM users WHERE name = '" + userInput + "'");
+
+        FileInputStream fis = new FileInputStream("config.txt");
+        int b = fis.read();
+
+        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+        Object obj = ois.readObject();
+
+        if (userInput != null) {
+            if (userInput.length() > 0) {
+                if (userInput.startsWith("admin")) {
+                    for (int i = 0; i < 10; i++) {
+                        if (i % 2 == 0) {
+                            System.out.println("even: " + i);
+                        } else {
+                            System.out.println("odd: " + i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void safeMethod() {
+        String greeting = "hello";
+        System.out.println(greeting);
+    }
+}
+"""
+
+
+class TestJavaAnalyzerIntegration:
+    def test_integration_finds_command_injection(self) -> None:
+        a = JavaAnalyzer()
+        result = a.analyze_file("UserService.java", _INTEGRATION_JAVA_SOURCE)
+        assert any(f.rule_id == "java-command-injection" for f in result.findings)
+
+    def test_integration_finds_unsafe_deserial(self) -> None:
+        a = JavaAnalyzer()
+        result = a.analyze_file("UserService.java", _INTEGRATION_JAVA_SOURCE)
+        assert any(f.rule_id == "java-unsafe-deserial" for f in result.findings)
+
+    def test_integration_finds_sql_concat(self) -> None:
+        a = JavaAnalyzer()
+        result = a.analyze_file("UserService.java", _INTEGRATION_JAVA_SOURCE)
+        assert any(f.rule_id == "java-sql-concat" for f in result.findings)
+
+    def test_integration_finds_resource_leak(self) -> None:
+        a = JavaAnalyzer()
+        result = a.analyze_file("UserService.java", _INTEGRATION_JAVA_SOURCE)
+        assert any(f.rule_id == "java-resource-leak" for f in result.findings)
+
+    def test_integration_finds_hardcoded_secret(self) -> None:
+        a = JavaAnalyzer()
+        result = a.analyze_file("UserService.java", _INTEGRATION_JAVA_SOURCE)
+        assert any(f.rule_id == "java-hardcoded-secret" for f in result.findings)
+
+    def test_integration_structure_extracted(self) -> None:
+        a = JavaAnalyzer()
+        result = a.analyze_file("UserService.java", _INTEGRATION_JAVA_SOURCE)
+        assert result.structure is not None
+        assert result.structure.file_path == "UserService.java"
+        assert result.structure.language == "java"
+        assert len(result.structure.classes) == 1
+        assert result.structure.classes[0].name == "UserService"
+        assert "Serializable" in result.structure.classes[0].bases
+        assert "BaseService" in result.structure.classes[0].bases
+
+    def test_integration_all_findings_have_required_fields(self) -> None:
+        a = JavaAnalyzer()
+        result = a.analyze_file("UserService.java", _INTEGRATION_JAVA_SOURCE)
+        for f in result.findings:
+            assert f.rule_id
+            assert f.severity
+            assert f.category
+            assert f.file_path
+            assert f.title
+            assert f.description
