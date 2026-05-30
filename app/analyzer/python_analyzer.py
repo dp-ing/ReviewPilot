@@ -56,6 +56,7 @@ class PythonAnalyzer(ASTAnalyzer):
         findings.extend(_ExecEvalDetector(filename).run(tree))
         findings.extend(_UnsafePickleDetector(filename).run(tree))
         findings.extend(_ShellInjectionDetector(filename).run(tree))
+        findings.extend(_SQLConcatDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -343,4 +344,51 @@ class _ShellInjectionDetector(ast.NodeVisitor):
             if kw.arg == "shell":
                 if isinstance(kw.value, ast.Constant) and kw.value.value is True:
                     return True
+        return False
+
+
+class _SQLConcatDetector(ast.NodeVisitor):
+    """Detect SQL string concatenation — rule python-sql-concat."""
+
+    _SQL_METHODS = {".execute", ".executemany", ".raw"}
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def visit_Call(self, node: ast.Call) -> None:
+        name = _call_name_helper(node.func)
+
+        if any(name.endswith(m) for m in self._SQL_METHODS):
+            if len(node.args) == 1 and self._is_string_building(node.args[0]):
+                self.findings.append(
+                    ASTFinding(
+                        rule_id="python-sql-concat",
+                        severity="warning",
+                        category="security",
+                        file_path=self.filename,
+                        line_start=node.lineno,
+                        line_end=node.end_lineno or node.lineno,
+                        title=f"SQL string concatenation in {name}()",
+                        description=(
+                            "Building SQL queries via string concatenation or "
+                            "formatting can lead to SQL injection. Use parameterized "
+                            "queries with placeholders (?, :name, %s) instead."
+                        ),
+                    )
+                )
+        self.generic_visit(node)
+
+    @staticmethod
+    def _is_string_building(node: ast.expr) -> bool:
+        """Check if an expression involves string concatenation, f-strings, or % formatting."""
+        if isinstance(node, ast.BinOp):
+            if isinstance(node.op, (ast.Add, ast.Mod)):
+                return True
+        if isinstance(node, ast.JoinedStr):
+            return bool(node.values)
         return False
