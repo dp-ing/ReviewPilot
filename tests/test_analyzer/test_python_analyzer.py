@@ -387,3 +387,44 @@ class TestBareExceptRule:
         result = a.analyze_file("test.py", "x = 1\ny = 2\n")
         findings = [f for f in result.findings if f.rule_id == "python-bare-except"]
         assert len(findings) == 0
+
+
+class TestHardcodedSecretRule:
+    def test_detect_password(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "password = 'super_secret_123'")
+        assert any(f.rule_id == "python-hardcoded-secret" for f in result.findings)
+
+    def test_detect_api_key(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "API_KEY = 'sk-abc123def456'")
+        assert any(f.rule_id == "python-hardcoded-secret" for f in result.findings)
+
+    def test_detect_token(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "secret_token = 'my_token_value'")
+        assert any(f.rule_id == "python-hardcoded-secret" for f in result.findings)
+
+    def test_no_alert_on_env_read(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "password = os.getenv('DB_PASSWORD')")
+        findings = [f for f in result.findings if f.rule_id == "python-hardcoded-secret"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_test_value(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "password = 'test_password'")
+        findings = [f for f in result.findings if f.rule_id == "python-hardcoded-secret"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_empty_string(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "password = ''")
+        findings = [f for f in result.findings if f.rule_id == "python-hardcoded-secret"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_normal_variable(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "username = 'alice'")
+        findings = [f for f in result.findings if f.rule_id == "python-hardcoded-secret"]
+        assert len(findings) == 0
