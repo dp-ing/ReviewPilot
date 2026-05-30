@@ -110,6 +110,7 @@ class JavaAnalyzer(ASTAnalyzer):
         findings.extend(_JavaUnsafeDeserialDetector(filename).run(tree_nodes))
         findings.extend(_JavaSQLConcatDetector(filename).run(tree_nodes))
         findings.extend(_JavaResourceLeakDetector(filename).run(tree_nodes))
+        findings.extend(_JavaHardcodedSecretDetector(filename).run(tree_nodes))
 
         return ASTResult(
             language="java",
@@ -287,5 +288,54 @@ class _JavaResourceLeakDetector:
     def _in_try_resource(path: Tuple[Any, ...]) -> bool:
         for p in path:
             if isinstance(p, javalang.tree.TryResource):
+                return True
+        return False
+
+
+class _JavaHardcodedSecretDetector:
+    """Detect hardcoded secrets in variable assignments — rule java-hardcoded-secret."""
+
+    _SECRET_PATTERNS = [
+        "password", "passwd", "pwd", "secret", "api_key", "apikey",
+        "api_token", "apitoken", "token", "access_key", "accesskey",
+        "private_key", "privatekey", "credential",
+    ]
+
+    _TEST_VALUES = {"", "test", "password", "secret", "changeme", "null", "example"}
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
+        findings: list[ASTFinding] = []
+        for _path, node in nodes:
+            if isinstance(node, javalang.tree.VariableDeclarator):
+                name_lower = node.name.lower()
+                if self._matches_secret_pattern(name_lower) and node.initializer:
+                    if isinstance(node.initializer, javalang.tree.Literal):
+                        value = str(node.initializer.value).strip('"').strip("'")
+                        if value.lower() not in self._TEST_VALUES and len(value) > 1:
+                            findings.append(
+                                ASTFinding(
+                                    rule_id="java-hardcoded-secret",
+                                    severity="warning",
+                                    category="security",
+                                    file_path=self.filename,
+                                    line_start=node.position.line if node.position else 1,
+                                    line_end=node.position.line if node.position else 1,
+                                    title=f"Hardcoded secret in variable '{node.name}'",
+                                    description=(
+                                        f"Variable '{node.name}' appears to contain a "
+                                        "hardcoded secret. Use environment variables or "
+                                        "a secrets manager instead."
+                                    ),
+                                )
+                            )
+        return findings
+
+    @classmethod
+    def _matches_secret_pattern(cls, name: str) -> bool:
+        for pattern in cls._SECRET_PATTERNS:
+            if pattern in name:
                 return True
         return False
