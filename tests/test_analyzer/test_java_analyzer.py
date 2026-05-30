@@ -282,3 +282,93 @@ class TestJavaResourceLeakRule:
         result = a.analyze_file("App.java", source)
         findings = [f for f in result.findings if f.rule_id == "java-resource-leak"]
         assert len(findings) == 0
+
+
+class TestJavaHardcodedSecretRule:
+    def test_detect_password(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void connect() {\n"
+            '        String password = "SuperSecret123";\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-hardcoded-secret" for f in result.findings)
+
+    def test_detect_api_key(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void setup() {\n"
+            '        String apiKey = "sk-abc123def456";\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-hardcoded-secret" for f in result.findings)
+
+    def test_detect_token(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void auth() {\n"
+            '        String token = "ghp_xxxxxxxxxxxx";\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-hardcoded-secret" for f in result.findings)
+
+    def test_no_alert_on_env_read(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void connect() {\n"
+            '        String password = System.getenv("DB_PASS");\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-hardcoded-secret"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_empty_string(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void connect() {\n"
+            '        String password = "";\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-hardcoded-secret"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_normal_variable(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void greet() {\n"
+            '        String name = "John";\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-hardcoded-secret"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_test_value(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void connect() {\n"
+            '        String password = "test";\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-hardcoded-secret"]
+        assert len(findings) == 0
