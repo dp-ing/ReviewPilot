@@ -4,6 +4,7 @@ import ast
 
 from app.analyzer.ast_base import ASTAnalyzer
 from app.analyzer.schemas import (
+    ASTFinding,
     ASTResult,
     CallInfo,
     ClassInfo,
@@ -40,7 +41,26 @@ class PythonAnalyzer(ASTAnalyzer):
         return structure
 
     def analyze_file(self, filename: str, source: str) -> ASTResult:
-        raise NotImplementedError
+        try:
+            tree = ast.parse(source, filename=filename)
+        except SyntaxError as exc:
+            return ASTResult(
+                language="python",
+                success=False,
+                error_message=str(exc),
+            )
+
+        structure = self.extract_structure(filename, source)
+
+        findings: list[ASTFinding] = []
+        findings.extend(_ExecEvalDetector(filename).run(tree))
+
+        return ASTResult(
+            language="python",
+            success=True,
+            findings=findings,
+            structure=structure,
+        )
 
 
 class _StructureExtractor(ast.NodeVisitor):
@@ -192,3 +212,41 @@ class _ComplexityCounter(ast.NodeVisitor):
         # and / or add complexity for each extra operand beyond the first
         self.count += len(node.values) - 1
         self.generic_visit(node)
+
+
+class _ExecEvalDetector(ast.NodeVisitor):
+    """Detect exec() and eval() calls — rule python-exec-eval."""
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def visit_Call(self, node: ast.Call) -> None:
+        name = _call_name_helper(node.func)
+        if name in ("exec", "eval"):
+            self.findings.append(
+                ASTFinding(
+                    rule_id="python-exec-eval",
+                    severity="critical",
+                    category="security",
+                    file_path=self.filename,
+                    line_start=node.lineno,
+                    line_end=node.end_lineno or node.lineno,
+                    title=f"Detected {name}() call",
+                    description=f"Use of {name}() can execute arbitrary code and may lead to code injection vulnerabilities. Avoid using {name}() with untrusted input.",
+                )
+            )
+        self.generic_visit(node)
+
+
+def _call_name_helper(node: ast.expr) -> str:
+    """Extract the name of a callable expression."""
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return ast.unparse(node)
+    return ast.unparse(node)
