@@ -108,6 +108,7 @@ class JavaAnalyzer(ASTAnalyzer):
         tree_nodes = list(tree)
         findings.extend(_JavaCommandInjectionDetector(filename).run(tree_nodes))
         findings.extend(_JavaUnsafeDeserialDetector(filename).run(tree_nodes))
+        findings.extend(_JavaSQLConcatDetector(filename).run(tree_nodes))
 
         return ASTResult(
             language="java",
@@ -203,3 +204,42 @@ class _JavaUnsafeDeserialDetector:
                     )
                 )
         return findings
+
+
+class _JavaSQLConcatDetector:
+    """Detect SQL string concatenation — rule java-sql-concat."""
+
+    _SQL_METHODS = {"executeQuery", "executeUpdate", "execute", "addBatch"}
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
+        findings: list[ASTFinding] = []
+        for _path, node in nodes:
+            if isinstance(node, javalang.tree.MethodInvocation) and node.member in self._SQL_METHODS:
+                if self._has_string_concat(node):
+                    findings.append(
+                        ASTFinding(
+                            rule_id="java-sql-concat",
+                            severity="warning",
+                            category="security",
+                            file_path=self.filename,
+                            line_start=node.position.line if node.position else 1,
+                            line_end=node.position.line if node.position else 1,
+                            title="SQL string concatenation may cause SQL injection",
+                            description=(
+                                "Building SQL queries via string concatenation can "
+                                "lead to SQL injection. Use PreparedStatement with "
+                                "parameterized queries instead."
+                            ),
+                        )
+                    )
+        return findings
+
+    def _has_string_concat(self, node: Any) -> bool:
+        for arg in node.arguments:
+            for _, child in arg:
+                if isinstance(child, javalang.tree.BinaryOperation) and child.operator == "+":
+                    return True
+        return False
