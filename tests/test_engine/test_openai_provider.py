@@ -90,3 +90,30 @@ class TestOpenAIProvider:
         with patch.object(urllib.request, "urlopen", side_effect=OSError("fail")):
             with pytest.raises(AIProviderError):
                 p.chat([Message(role="user", content="hi")])
+
+    def test_custom_api_base(self) -> None:
+        p = OpenAIProvider(api_key="sk-test", api_base="https://custom.api.com/v1")
+        with patch.object(urllib.request, "urlopen", return_value=_build_response("ok")):
+            resp = p.chat([Message(role="user", content="hi")])
+        assert resp.content == "ok"
+
+    def test_chat_passes_kwargs_to_body(self) -> None:
+        p = OpenAIProvider(api_key="sk-test")
+        captured_body: dict[str, Any] = {}
+
+        def capture_request(req: urllib.request.Request, **kw: Any) -> Any:
+            captured_body.update(json.loads(req.data.decode("utf-8")))
+            return _build_response("ok")
+
+        with patch.object(urllib.request, "urlopen", side_effect=capture_request):
+            p.chat(
+                [Message(role="user", content="hi")],
+                temperature=0.5,
+                max_tokens=100,
+            )
+        assert captured_body.get("temperature") == 0.5
+        assert captured_body.get("max_tokens") == 100
+
+    def test_timeout_configuration(self) -> None:
+        p = OpenAIProvider(api_key="sk-test", timeout=30)
+        assert p.timeout == 30
