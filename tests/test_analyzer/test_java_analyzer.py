@@ -97,3 +97,48 @@ class TestJavaCommandInjectionRule:
         result = a.analyze_file("App.java", source)
         findings = [f for f in result.findings if f.rule_id == "java-command-injection"]
         assert len(findings) == 0
+
+
+class TestJavaUnsafeDeserialRule:
+    def test_detect_read_object(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.io.ObjectInputStream;\n"
+            "public class App {\n"
+            "    public void load() throws Exception {\n"
+            "        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());\n"
+            "        ois.readObject();\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-unsafe-deserial" for f in result.findings)
+
+    def test_detect_read_unshared(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.io.ObjectInputStream;\n"
+            "public class App {\n"
+            "    public void load() throws Exception {\n"
+            "        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());\n"
+            "        ois.readUnshared();\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-unsafe-deserial" for f in result.findings)
+
+    def test_no_alert_on_safe_call(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.io.FileInputStream;\n"
+            "public class App {\n"
+            "    public void run() {\n"
+            "        FileInputStream fis = new FileInputStream(\"data.txt\");\n"
+            "        int b = fis.read();\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-unsafe-deserial"]
+        assert len(findings) == 0
