@@ -1,0 +1,47 @@
+## Task: Phase 1 — Change Summary & Risk Assessment
+
+Analyze the following pull request changes at a high level.
+
+### PR Information
+- **Title**: {{ pr_title }}
+- **Description**: {{ pr_description }}
+
+### Changed Files
+{% for file in changed_files %}
+- `{{ file }}`
+{% endfor %}
+
+### Diff Summary
+- Total files changed: {{ diff_stats.total_files }}
+- Total additions: {{ diff_stats.additions }}
+- Total deletions: {{ diff_stats.deletions }}
+
+### Diff (abbreviated)
+```
+{{ diff_abbreviated }}
+```
+
+## Instructions
+
+1. Summarize the overall purpose of these changes in 2-3 sentences.
+2. Assess the risk level (low / medium / high) based on:
+   - Scope of changes (files touched, lines changed)
+   - Type of changes (new feature, bug fix, refactor, config change)
+   - Areas affected (security-sensitive code, database, API, UI)
+3. Identify 2-5 key changes that reviewers should focus on.
+4. Suggest 2-4 analysis directions for the deep-dive phase:
+   - security: if auth/crypto/input handling affected
+   - logic: if business logic or algorithms changed
+   - performance: if DB queries or heavy computation involved
+   - style: if naming/formatting/architecture patterns changed
+
+Respond with a JSON object:
+
+```json
+{
+  "summary": "string - 2-3 sentence overview",
+  "risk_level": "low|medium|high",
+  "key_changes": ["string - key change description"],
+  "analysis_directions": ["security", "logic", "performance", "style"]
+}
+```
