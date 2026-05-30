@@ -87,7 +87,13 @@ class TestJavaAnalyzer:
 class TestJavaCommandInjectionRule:
     def test_detect_runtime_exec(self) -> None:
         a = JavaAnalyzer()
-        source = "public class App {\n    public void run() {\n        Runtime.getRuntime().exec(\"ls\");\n    }\n}"
+        source = (
+            "public class App {\n"
+            "    public void run(String cmd) {\n"
+            "        Runtime.getRuntime().exec(cmd);\n"
+            "    }\n"
+            "}"
+        )
         result = a.analyze_file("App.java", source)
         assert any(f.rule_id == "java-command-injection" for f in result.findings)
 

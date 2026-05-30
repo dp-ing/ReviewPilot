@@ -159,25 +159,35 @@ class _JavaCommandInjectionDetector:
 
     def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
         findings: list[ASTFinding] = []
-        for path, node in nodes:
+        for _path, node in nodes:
             if isinstance(node, javalang.tree.MethodInvocation) and node.member == "exec":
-                findings.append(
-                    ASTFinding(
-                        rule_id="java-command-injection",
-                        severity="critical",
-                        category="security",
-                        file_path=self.filename,
-                        line_start=node.position.line if node.position else 1,
-                        line_end=node.position.line if node.position else 1,
-                        title="Runtime.exec() command injection risk",
-                        description=(
-                            "Using Runtime.exec() with untrusted input can lead to "
-                            "command injection. Use ProcessBuilder with a list of "
-                            "arguments instead of passing a command string."
-                        ),
+                if not self._all_args_are_literals(node):
+                    findings.append(
+                        ASTFinding(
+                            rule_id="java-command-injection",
+                            severity="critical",
+                            category="security",
+                            file_path=self.filename,
+                            line_start=node.position.line if node.position else 1,
+                            line_end=node.position.line if node.position else 1,
+                            title="Runtime.exec() command injection risk",
+                            description=(
+                                "Using Runtime.exec() with untrusted input can lead to "
+                                "command injection. Use ProcessBuilder with a list of "
+                                "arguments instead of passing a command string."
+                            ),
+                        )
                     )
-                )
         return findings
+
+    @staticmethod
+    def _all_args_are_literals(node: Any) -> bool:
+        if not node.arguments:
+            return True
+        for arg in node.arguments:
+            if not isinstance(arg, javalang.tree.Literal):
+                return False
+        return True
 
 
 class _JavaUnsafeDeserialDetector:
@@ -245,8 +255,19 @@ class _JavaSQLConcatDetector:
         for arg in node.arguments:
             for _, child in arg:
                 if isinstance(child, javalang.tree.BinaryOperation) and child.operator == "+":
-                    return True
+                    if not self._all_literals_in_concat(child):
+                        return True
         return False
+
+    @staticmethod
+    def _all_literals_in_concat(node: Any) -> bool:
+        if isinstance(node, javalang.tree.BinaryOperation):
+            if not isinstance(node.operandl, javalang.tree.Literal):
+                return False
+            if not isinstance(node.operandr, javalang.tree.Literal):
+                return False
+            return True
+        return True
 
 
 class _JavaResourceLeakDetector:
