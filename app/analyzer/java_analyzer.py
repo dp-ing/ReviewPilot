@@ -1,3 +1,5 @@
+from typing import Any, Tuple
+
 import javalang  # type: ignore[import-untyped]
 
 from app.analyzer.ast_base import ASTAnalyzer
@@ -92,7 +94,7 @@ class JavaAnalyzer(ASTAnalyzer):
 
     def analyze_file(self, filename: str, source: str) -> ASTResult:
         try:
-            javalang.parse.parse(source)
+            tree = javalang.parse.parse(source)
         except (javalang.parser.JavaSyntaxError, javalang.tokenizer.LexerError) as exc:
             return ASTResult(
                 language="java",
@@ -102,6 +104,9 @@ class JavaAnalyzer(ASTAnalyzer):
 
         structure = self.extract_structure(filename, source)
         findings: list[ASTFinding] = []
+
+        tree_nodes = list(tree)
+        findings.extend(_JavaCommandInjectionDetector(filename).run(tree_nodes))
 
         return ASTResult(
             language="java",
@@ -138,3 +143,32 @@ class JavaAnalyzer(ASTAnalyzer):
             decorators=[],
             complexity=1,
         )
+
+
+class _JavaCommandInjectionDetector:
+    """Detect Runtime.exec() calls — rule java-command-injection."""
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
+        findings: list[ASTFinding] = []
+        for path, node in nodes:
+            if isinstance(node, javalang.tree.MethodInvocation) and node.member == "exec":
+                findings.append(
+                    ASTFinding(
+                        rule_id="java-command-injection",
+                        severity="critical",
+                        category="security",
+                        file_path=self.filename,
+                        line_start=node.position.line if node.position else 1,
+                        line_end=node.position.line if node.position else 1,
+                        title="Runtime.exec() command injection risk",
+                        description=(
+                            "Using Runtime.exec() with untrusted input can lead to "
+                            "command injection. Use ProcessBuilder with a list of "
+                            "arguments instead of passing a command string."
+                        ),
+                    )
+                )
+        return findings

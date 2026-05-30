@@ -82,3 +82,18 @@ class TestJavaAnalyzer:
         result = a.analyze_file("Bad.java", "this is not valid java @@@")
         assert result.success is False
         assert result.error_message is not None
+
+
+class TestJavaCommandInjectionRule:
+    def test_detect_runtime_exec(self) -> None:
+        a = JavaAnalyzer()
+        source = "public class App {\n    public void run() {\n        Runtime.getRuntime().exec(\"ls\");\n    }\n}"
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-command-injection" for f in result.findings)
+
+    def test_no_alert_on_safe_call(self) -> None:
+        a = JavaAnalyzer()
+        source = "public class App {\n    public void run() {\n        System.out.println(\"hello\");\n    }\n}"
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-command-injection"]
+        assert len(findings) == 0
