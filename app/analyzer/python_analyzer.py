@@ -54,6 +54,7 @@ class PythonAnalyzer(ASTAnalyzer):
 
         findings: list[ASTFinding] = []
         findings.extend(_ExecEvalDetector(filename).run(tree))
+        findings.extend(_UnsafePickleDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -250,3 +251,38 @@ def _call_name_helper(node: ast.expr) -> str:
     if isinstance(node, ast.Attribute):
         return ast.unparse(node)
     return ast.unparse(node)
+
+
+class _UnsafePickleDetector(ast.NodeVisitor):
+    """Detect unsafe pickle.loads() / pickle.load() calls — rule python-unsafe-pickle."""
+
+    _DANGEROUS = {"pickle.loads", "pickle.load", "cPickle.loads", "cPickle.load", "dill.loads", "dill.load"}
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def visit_Call(self, node: ast.Call) -> None:
+        name = _call_name_helper(node.func)
+        if name in self._DANGEROUS:
+            self.findings.append(
+                ASTFinding(
+                    rule_id="python-unsafe-pickle",
+                    severity="critical",
+                    category="security",
+                    file_path=self.filename,
+                    line_start=node.lineno,
+                    line_end=node.end_lineno or node.lineno,
+                    title=f"Unsafe deserialization via {name}()",
+                    description=(
+                        f"Deserializing untrusted data with {name}() can lead to "
+                        "arbitrary code execution. Use a safer serialization format "
+                        "like JSON or restrict pickle to trusted data sources only."
+                    ),
+                )
+            )
+        self.generic_visit(node)
