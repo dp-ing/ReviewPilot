@@ -555,3 +555,57 @@ class TestJavaAnalyzerIntegration:
             assert f.file_path
             assert f.title
             assert f.description
+
+
+class TestJavaFalsePositiveControl:
+    def test_no_alert_on_literal_exec_arg(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void run() {\n"
+            '        Runtime.getRuntime().exec("ls -la");\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-command-injection"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_literal_sql_concat(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.sql.Statement;\n"
+            "public class App {\n"
+            "    public void query(Statement stmt) throws Exception {\n"
+            '        stmt.executeQuery("SELECT " + "* FROM users");\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-sql-concat"]
+        assert len(findings) == 0
+
+    def test_still_detects_sql_concat_with_variable(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "import java.sql.Statement;\n"
+            "public class App {\n"
+            "    public void query(Statement stmt, String id) throws Exception {\n"
+            '        stmt.executeQuery("SELECT * FROM users WHERE id=" + id);\n'
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-sql-concat" for f in result.findings)
+
+    def test_still_detects_runtime_exec_with_variable(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void run(String cmd) {\n"
+            "        Runtime.getRuntime().exec(cmd);\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-command-injection" for f in result.findings)
