@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}ReviewPilot — 增强详情{% endblock %}
+{% block nav_reviews %}bg-gray-100 font-medium{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <a href="/reviews/{{ view_data.record.id }}" class="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block">← 返回详情</a>
+    <h2 class="text-2xl font-bold text-gray-900">增强详情</h2>
+    <div class="flex items-center gap-3 mt-1 text-sm text-gray-500">
+        <span>{{ view_data.record.pull_request.repository.full_name }}</span>
+        <span>PR #{{ view_data.record.pull_request.pr_number }}</span>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-red-50 rounded-xl border border-red-200 p-4">
+        <div class="text-sm text-red-600 font-medium">🔴 Critical</div>
+        <div class="text-2xl font-bold text-red-700">{{ view_data.total_critical }}</div>
+    </div>
+    <div class="bg-orange-50 rounded-xl border border-orange-200 p-4">
+        <div class="text-sm text-orange-600 font-medium">🟠 Warning</div>
+        <div class="text-2xl font-bold text-orange-700">{{ view_data.total_warning }}</div>
+    </div>
+    <div class="bg-gray-50 rounded-xl border border-gray-200 p-4">
+        <div class="text-sm text-gray-600 font-medium">⚪ Suggestion</div>
+        <div class="text-2xl font-bold text-gray-700">{{ view_data.total_suggestion }}</div>
+    </div>
+</div>
+
+{% for group in view_data.file_groups %}
+<div class="bg-white rounded-xl border border-gray-200 mb-4 overflow-hidden">
+    <div class="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+        <div>
+            <span class="text-sm font-mono font-medium text-gray-900">{{ group.file_path }}</span>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-gray-500">
+            {% if group.critical_count %}
+            <span class="text-red-600">🔴 {{ group.critical_count }}</span>
+            {% endif %}
+            {% if group.warning_count %}
+            <span class="text-orange-600">🟠 {{ group.warning_count }}</span>
+            {% endif %}
+            {% if group.suggestion_count %}
+            <span>⚪ {{ group.suggestion_count }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="divide-y divide-gray-100">
+        {% for issue in group.issues %}
+        <div class="px-6 py-3 hover:bg-gray-50 transition-colors" x-data="{ open: false }">
+            <div class="flex items-start gap-3 cursor-pointer" @click="open = !open">
+                <div class="flex-shrink-0 mt-0.5">
+                    {% set severity = issue.severity %}
+                    {% include "shared/severity_badge.html" %}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-900">{{ issue.title }}</span>
+                        <span class="text-xs text-gray-400">:{{ issue.line_start }}{% if issue.line_start != issue.line_end %}-{{ issue.line_end }}{% endif %}</span>
+                    </div>
+                    <div x-show="open" x-cloak class="mt-2">
+                        <p class="text-sm text-gray-600">{{ issue.description }}</p>
+                        {% if issue.suggestion %}
+                        <pre class="mt-2 p-3 bg-gray-50 rounded-lg text-xs overflow-x-auto"><code>{{ issue.suggestion }}</code></pre>
+                        {% endif %}
+                        <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                            <span>{{ issue.category }}</span>
+                            <span>置信度 {{ (issue.confidence * 100)|int }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
+    <div class="text-4xl mb-2">✅</div>
+    <p>未发现问题</p>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block head %}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}
