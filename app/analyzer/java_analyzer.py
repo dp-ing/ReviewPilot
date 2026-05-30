@@ -107,6 +107,7 @@ class JavaAnalyzer(ASTAnalyzer):
 
         tree_nodes = list(tree)
         findings.extend(_JavaCommandInjectionDetector(filename).run(tree_nodes))
+        findings.extend(_JavaUnsafeDeserialDetector(filename).run(tree_nodes))
 
         return ASTResult(
             language="java",
@@ -168,6 +169,36 @@ class _JavaCommandInjectionDetector:
                             "Using Runtime.exec() with untrusted input can lead to "
                             "command injection. Use ProcessBuilder with a list of "
                             "arguments instead of passing a command string."
+                        ),
+                    )
+                )
+        return findings
+
+
+class _JavaUnsafeDeserialDetector:
+    """Detect ObjectInputStream.readObject() / readUnshared() — rule java-unsafe-deserial."""
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
+        findings: list[ASTFinding] = []
+        unsafe_methods = {"readObject", "readUnshared"}
+        for _path, node in nodes:
+            if isinstance(node, javalang.tree.MethodInvocation) and node.member in unsafe_methods:
+                findings.append(
+                    ASTFinding(
+                        rule_id="java-unsafe-deserial",
+                        severity="critical",
+                        category="security",
+                        file_path=self.filename,
+                        line_start=node.position.line if node.position else 1,
+                        line_end=node.position.line if node.position else 1,
+                        title="Unsafe deserialization via ObjectInputStream",
+                        description=(
+                            "Deserializing untrusted data with ObjectInputStream can lead "
+                            "to remote code execution. Validate or filter input before "
+                            "deserialization, or use a type-checking ObjectInputFilter."
                         ),
                     )
                 )
