@@ -9,21 +9,21 @@
 
 ### 3.1 基础结构
 
-- [ ] **PR-03-01** — 实现 `app/analyzer/schemas.py`
+- [x] **PR-03-01** — 实现 `app/analyzer/schemas.py`
   - `ASTFinding` dataclass（rule_id, severity, category, file_path, line_start, line_end, title, description, code_snippet）
   - `FunctionInfo` + `ClassInfo` + `CallInfo` dataclass
   - `CodeStructure` dataclass
   - `ASTResult` dataclass（findings + structure）
-- [ ] **PR-03-02** — 实现 `app/analyzer/ast_base.py` — `ASTAnalyzer` 抽象基类
+- [x] **PR-03-02** — 实现 `app/analyzer/ast_base.py` — `ASTAnalyzer` 抽象基类
   - `get_supported_language()`, `analyze_file()`, `extract_structure()` 抽象方法
-- [ ] **PR-03-03** — 实现 `app/analyzer/registry.py` — `AnalyzerRegistry`
+- [x] **PR-03-03** — 实现 `app/analyzer/registry.py` — `AnalyzerRegistry`
   - `register()`, `get(language)`, `detect_language(filename)`
 
 ### 3.2 Python AST 分析器 — 结构提取
 
-- [ ] **PR-03-04** — 实现 `app/analyzer/python_analyzer.py` — 骨架 + `get_supported_language()`
-- [ ] **PR-03-05** — 实现 `extract_structure()` — 提取函数/类/import/变量/异常处理块
-- [ ] **PR-03-06** — 编写结构提取测试（给定 Python 源码 → 断言函数数/类数/import 数正确）
+- [x] **PR-03-04** — 实现 `app/analyzer/python_analyzer.py` — 骨架 + `get_supported_language()`
+- [x] **PR-03-05** — 实现 `extract_structure()` — 提取函数/类/import/变量/异常处理块
+- [x] **PR-03-06** — 编写结构提取测试（给定 Python 源码 → 断言函数数/类数/import 数正确）
 
 ### 3.3 Python AST 分析器 — 安全规则
 
