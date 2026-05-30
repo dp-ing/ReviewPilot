@@ -59,6 +59,7 @@ class PythonAnalyzer(ASTAnalyzer):
         findings.extend(_SQLConcatDetector(filename).run(tree))
         findings.extend(_BareExceptDetector(filename).run(tree))
         findings.extend(_HardcodedSecretDetector(filename).run(tree))
+        findings.extend(_FileLeakDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -487,3 +488,48 @@ class _HardcodedSecretDetector(ast.NodeVisitor):
         if isinstance(node, ast.Attribute):
             return node.attr
         return ""
+
+
+class _FileLeakDetector(ast.NodeVisitor):
+    """Detect open() without with statement — rule python-file-leak."""
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+        self._safe_open_ids: set[int] = set()
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self._collect_safe_open(tree)
+        self.visit(tree)
+        return self.findings
+
+    def _collect_safe_open(self, node: ast.AST) -> None:
+        for child in ast.walk(node):
+            if isinstance(child, ast.With):
+                for item in child.items:
+                    if isinstance(item.context_expr, ast.Call):
+                        name = _call_name_helper(item.context_expr.func)
+                        if name == "open":
+                            self._safe_open_ids.add(id(item.context_expr))
+
+    def visit_Call(self, node: ast.Call) -> None:
+        name = _call_name_helper(node.func)
+        if name == "open" and id(node) not in self._safe_open_ids:
+            self.findings.append(
+                ASTFinding(
+                    rule_id="python-file-leak",
+                    severity="warning",
+                    category="best_practice",
+                    file_path=self.filename,
+                    line_start=node.lineno,
+                    line_end=node.end_lineno or node.lineno,
+                    title="open() used without with statement",
+                    description=(
+                        "Using open() without a 'with' statement can lead to file "
+                        "resource leaks if close() is not called or an exception "
+                        "occurs. Use 'with open(...) as f:' to ensure the file is "
+                        "always closed."
+                    ),
+                )
+            )
+        self.generic_visit(node)
