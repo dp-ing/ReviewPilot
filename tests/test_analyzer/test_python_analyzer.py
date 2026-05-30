@@ -428,3 +428,30 @@ class TestHardcodedSecretRule:
         result = a.analyze_file("test.py", "username = 'alice'")
         findings = [f for f in result.findings if f.rule_id == "python-hardcoded-secret"]
         assert len(findings) == 0
+
+
+class TestFileLeakRule:
+    def test_detect_open_without_with(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "f = open('data.txt')\ndata = f.read()")
+        assert any(f.rule_id == "python-file-leak" for f in result.findings)
+
+    def test_no_alert_on_with_open(self) -> None:
+        a = PythonAnalyzer()
+        source = "with open('data.txt') as f:\n    data = f.read()\n"
+        result = a.analyze_file("test.py", source)
+        findings = [f for f in result.findings if f.rule_id == "python-file-leak"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_with_open_multiline(self) -> None:
+        a = PythonAnalyzer()
+        source = "with open('a.txt') as fa, open('b.txt') as fb:\n    pass\n"
+        result = a.analyze_file("test.py", source)
+        findings = [f for f in result.findings if f.rule_id == "python-file-leak"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_other_call(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", 'print("hello")')
+        findings = [f for f in result.findings if f.rule_id == "python-file-leak"]
+        assert len(findings) == 0
