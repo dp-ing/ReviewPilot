@@ -236,3 +236,37 @@ class TestExecEvalRule:
         result = a.analyze_file("test.py", "def broken(")
         assert result.success is False
         assert result.error_message is not None
+
+
+class TestUnsafePickleRule:
+    def test_detect_pickle_loads(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "pickle.loads(data)")
+        assert len(result.findings) == 1
+        f = result.findings[0]
+        assert f.rule_id == "python-unsafe-pickle"
+        assert f.severity == "critical"
+        assert f.category == "security"
+
+    def test_detect_pickle_load(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "pickle.load(f)")
+        assert len(result.findings) >= 1
+        rule_ids = [f.rule_id for f in result.findings]
+        assert "python-unsafe-pickle" in rule_ids
+
+    def test_detect_dill_loads(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "dill.loads(data)")
+        assert any(f.rule_id == "python-unsafe-pickle" for f in result.findings)
+
+    def test_no_false_positive_on_json_loads(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "json.loads(data)")
+        pickle_findings = [f for f in result.findings if f.rule_id == "python-unsafe-pickle"]
+        assert len(pickle_findings) == 0
+
+    def test_no_false_positive_on_pickle_module(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "import pickle\nx = pickle.HIGHEST_PROTOCOL")
+        assert len(result.findings) == 0
