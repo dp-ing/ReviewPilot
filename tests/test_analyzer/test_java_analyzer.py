@@ -372,3 +372,51 @@ class TestJavaHardcodedSecretRule:
         result = a.analyze_file("App.java", source)
         findings = [f for f in result.findings if f.rule_id == "java-hardcoded-secret"]
         assert len(findings) == 0
+
+
+class TestJavaComplexityRule:
+    def test_detect_high_complexity(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void complex(int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k) {\n"
+            "        if (a > 0) { b++; }\n"
+            "        if (b > 0) { c++; }\n"
+            "        if (c > 0) { d++; }\n"
+            "        if (d > 0) { e++; }\n"
+            "        if (e > 0) { f++; }\n"
+            "        if (f > 0) { g++; }\n"
+            "        if (g > 0) { h++; }\n"
+            "        if (h > 0) { i++; }\n"
+            "        if (i > 0) { j++; }\n"
+            "        if (j > 0) { k++; }\n"
+            "        for (int x = 0; x < 10; x++) { k--; }\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        assert any(f.rule_id == "java-complexity" for f in result.findings)
+
+    def test_no_alert_on_simple_function(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public int add(int a, int b) {\n"
+            "        return a + b;\n"
+            "    }\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-complexity"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_empty_function(self) -> None:
+        a = JavaAnalyzer()
+        source = (
+            "public class App {\n"
+            "    public void empty() {}\n"
+            "}"
+        )
+        result = a.analyze_file("App.java", source)
+        findings = [f for f in result.findings if f.rule_id == "java-complexity"]
+        assert len(findings) == 0
