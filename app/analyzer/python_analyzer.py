@@ -60,6 +60,7 @@ class PythonAnalyzer(ASTAnalyzer):
         findings.extend(_BareExceptDetector(filename).run(tree))
         findings.extend(_HardcodedSecretDetector(filename).run(tree))
         findings.extend(_FileLeakDetector(filename).run(tree))
+        findings.extend(_ComplexityDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -529,6 +530,46 @@ class _FileLeakDetector(ast.NodeVisitor):
                         "resource leaks if close() is not called or an exception "
                         "occurs. Use 'with open(...) as f:' to ensure the file is "
                         "always closed."
+                    ),
+                )
+            )
+        self.generic_visit(node)
+
+
+class _ComplexityDetector(ast.NodeVisitor):
+    """Detect functions with cyclomatic complexity > 15 — rule python-complexity."""
+
+    _THRESHOLD = 15
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def _compute(self, node: ast.FunctionDef) -> int:
+        counter = _ComplexityCounter()
+        counter.visit(node)
+        return counter.count
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        complexity = self._compute(node)
+        if complexity > self._THRESHOLD:
+            self.findings.append(
+                ASTFinding(
+                    rule_id="python-complexity",
+                    severity="warning",
+                    category="style",
+                    file_path=self.filename,
+                    line_start=node.lineno,
+                    line_end=node.end_lineno or node.lineno,
+                    title=f"Function '{node.name}' has high cyclomatic complexity ({complexity})",
+                    description=(
+                        f"Cyclomatic complexity of {complexity} exceeds the threshold "
+                        f"of {self._THRESHOLD}. Consider refactoring the function into "
+                        "smaller, more focused functions."
                     ),
                 )
             )

@@ -455,3 +455,45 @@ class TestFileLeakRule:
         result = a.analyze_file("test.py", 'print("hello")')
         findings = [f for f in result.findings if f.rule_id == "python-file-leak"]
         assert len(findings) == 0
+
+
+class TestComplexityRule:
+    def test_detect_high_complexity(self) -> None:
+        a = PythonAnalyzer()
+        source = (
+            "def f(x):\n"
+            + "    if x > 0:\n"
+            + "        for i in range(x):\n"
+            + "            if i % 2:\n"
+            + "                while True:\n"
+            + "                    if i > 10:\n"
+            + "                        for j in range(i):\n"
+            + "                            if j > 5:\n"
+            + "                                while j:\n"
+            + "                                    if j % 3:\n"
+            + "                                        for k in range(j):\n"
+            + "                                            if k:\n"
+            + "                                                for m in range(k):\n"
+            + "                                                    if m:\n"
+            + "                                                        for n in range(m):\n"
+            + "                                                            if n:\n"
+            + "                                                                for o in range(n):\n"
+            + "                                                                    pass\n"
+            + "    return 0\n"
+        )
+        result = a.analyze_file("test.py", source)
+        assert any(f.rule_id == "python-complexity" for f in result.findings)
+
+    def test_no_alert_on_simple_function(self) -> None:
+        a = PythonAnalyzer()
+        source = "def simple(x):\n    return x + 1\n"
+        result = a.analyze_file("test.py", source)
+        findings = [f for f in result.findings if f.rule_id == "python-complexity"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_empty_function(self) -> None:
+        a = PythonAnalyzer()
+        source = "def empty():\n    pass\n"
+        result = a.analyze_file("test.py", source)
+        findings = [f for f in result.findings if f.rule_id == "python-complexity"]
+        assert len(findings) == 0
