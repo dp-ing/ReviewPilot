@@ -17,7 +17,7 @@ def client() -> Generator[TestClient, None, None]:
 
 class TestReposList:
     def test_unauthenticated_shows_login(self, client: TestClient) -> None:
-        resp = client.get("/repos", follow_redirects=False)
+        resp = client.get("/repositories", follow_redirects=False)
         assert resp.status_code == 200
         assert "GitHub" in resp.text
 
@@ -43,7 +43,7 @@ class TestReposList:
         mock_session.query.return_value = mock_query
         mock_session_cls.return_value = mock_session
 
-        resp = client.get("/repos")
+        resp = client.get("/repositories")
         assert resp.status_code == 200
         assert "仓库管理" in resp.text
 
@@ -70,5 +70,5 @@ class TestRepoConfig:
         mock_session.query.return_value = mock_query
         mock_session_cls.return_value = mock_session
 
-        resp = client.get("/repos/999/config")
+        resp = client.get("/repositories/999/config")
         assert resp.status_code == 404

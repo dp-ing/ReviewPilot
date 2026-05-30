@@ -1,0 +1,32 @@
+/* ReviewPilot — custom styles */
+
+/* Smooth transitions for HTMX partial swaps */
+.htmx-swapping {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* Scrollable code blocks */
+.code-scroll {
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* File path truncation */
+.file-path-truncate {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Issue severity border accent */
+.severity-accent-critical {
+    border-left: 3px solid #ef4444;
+}
+.severity-accent-warning {
+    border-left: 3px solid #f97316;
+}
+.severity-accent-suggestion {
+    border-left: 3px solid #9ca3af;
+}

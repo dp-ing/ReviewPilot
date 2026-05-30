@@ -59,6 +59,28 @@ async def index(request: Request) -> HTMLResponse:
     )
 
 
+@router.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request) -> HTMLResponse:
+    """Dashboard page with charts."""
+    user = require_auth(request)
+    if user is None:
+        return templates.TemplateResponse(
+            request=request, name="auth/login_prompt.html"
+        )
+
+    service = get_stats_service()
+    overview = service.get_overview_stats()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard/overview.html",
+        context={
+            "user": user,
+            "overview": overview,
+        },
+    )
+
+
 @router.get("/dashboard/stats")
 async def dashboard_stats(request: Request) -> JSONResponse:
     """HTMX endpoint: return stats as JSON for partial refresh."""
@@ -200,8 +222,8 @@ async def update_issue_status(
         db.close()
 
 
-@router.get("/repos", response_class=HTMLResponse)
-async def repos_list(request: Request) -> HTMLResponse:
+@router.get("/repositories", response_class=HTMLResponse)
+async def repositories_list(request: Request) -> HTMLResponse:
     """List all connected repositories."""
     user = require_auth(request)
     if user is None:
@@ -236,7 +258,7 @@ async def repos_list(request: Request) -> HTMLResponse:
         db.close()
 
 
-@router.get("/repos/{repo_id}/config", response_class=HTMLResponse)
+@router.get("/repositories/{repo_id}/config", response_class=HTMLResponse)
 async def repo_config_page(
     request: Request, repo_id: int, saved: bool = False
 ) -> HTMLResponse:
