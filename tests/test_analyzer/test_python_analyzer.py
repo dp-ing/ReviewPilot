@@ -359,3 +359,31 @@ class TestSQLConcatRule:
         result = a.analyze_file("test.py", 'print("hello " + name)')
         findings = [f for f in result.findings if f.rule_id == "python-sql-concat"]
         assert len(findings) == 0
+
+
+class TestBareExceptRule:
+    def test_detect_bare_except(self) -> None:
+        a = PythonAnalyzer()
+        source = "try:\n    x = 1\nexcept:\n    pass\n"
+        result = a.analyze_file("test.py", source)
+        assert any(f.rule_id == "python-bare-except" for f in result.findings)
+
+    def test_no_alert_on_typed_except(self) -> None:
+        a = PythonAnalyzer()
+        source = "try:\n    x = 1\nexcept ValueError:\n    pass\n"
+        result = a.analyze_file("test.py", source)
+        findings = [f for f in result.findings if f.rule_id == "python-bare-except"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_multiple_except(self) -> None:
+        a = PythonAnalyzer()
+        source = "try:\n    x = 1\nexcept (ValueError, TypeError):\n    pass\n"
+        result = a.analyze_file("test.py", source)
+        findings = [f for f in result.findings if f.rule_id == "python-bare-except"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_no_try(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "x = 1\ny = 2\n")
+        findings = [f for f in result.findings if f.rule_id == "python-bare-except"]
+        assert len(findings) == 0
