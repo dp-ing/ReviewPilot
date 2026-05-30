@@ -55,6 +55,7 @@ class PythonAnalyzer(ASTAnalyzer):
         findings: list[ASTFinding] = []
         findings.extend(_ExecEvalDetector(filename).run(tree))
         findings.extend(_UnsafePickleDetector(filename).run(tree))
+        findings.extend(_ShellInjectionDetector(filename).run(tree))
 
         return ASTResult(
             language="python",
@@ -286,3 +287,60 @@ class _UnsafePickleDetector(ast.NodeVisitor):
                 )
             )
         self.generic_visit(node)
+
+
+class _ShellInjectionDetector(ast.NodeVisitor):
+    """Detect shell injection risks — rule python-shell-injection."""
+
+    _ALWAYS_SHELL = {"os.system", "os.popen"}
+    _SUBPROCESS_WITH_SHELL = {
+        "subprocess.call",
+        "subprocess.Popen",
+        "subprocess.run",
+        "subprocess.check_call",
+        "subprocess.check_output",
+    }
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.findings: list[ASTFinding] = []
+
+    def run(self, tree: ast.AST) -> list[ASTFinding]:
+        self.visit(tree)
+        return self.findings
+
+    def visit_Call(self, node: ast.Call) -> None:
+        name = _call_name_helper(node.func)
+
+        is_always_shell = name in self._ALWAYS_SHELL
+        is_subprocess = name in self._SUBPROCESS_WITH_SHELL
+        has_shell_true = is_subprocess and self._has_shell_true(node)
+
+        if is_always_shell or has_shell_true:
+            self.findings.append(
+                ASTFinding(
+                    rule_id="python-shell-injection",
+                    severity="critical",
+                    category="security",
+                    file_path=self.filename,
+                    line_start=node.lineno,
+                    line_end=node.end_lineno or node.lineno,
+                    title=f"Potential shell injection via {name}()",
+                    description=(
+                        f"Using {name}() with shell commands can lead to command "
+                        "injection vulnerabilities if user input is incorporated "
+                        "into the command string. Use subprocess with shell=False "
+                        "and pass arguments as a list, or use shlex.quote() to "
+                        "escape user input."
+                    ),
+                )
+            )
+        self.generic_visit(node)
+
+    @staticmethod
+    def _has_shell_true(node: ast.Call) -> bool:
+        for kw in node.keywords:
+            if kw.arg == "shell":
+                if isinstance(kw.value, ast.Constant) and kw.value.value is True:
+                    return True
+        return False
