@@ -103,3 +103,41 @@ class TestDiffParser:
         assert len(changed) >= 1
         contents = [c for _, c in changed]
         assert any('print("new")' in c for c in contents)
+
+    def test_binary_file_diff_is_ignored(self) -> None:
+        diff = (
+            "diff --git a/image.png b/image.png\n"
+            "Binary files a/image.png and b/image.png differ\n"
+        )
+        parser = DiffParser()
+        result = parser.parse(diff)
+        # Binary diff has no hunks
+        assert "image.png" not in result.files or len(result.files.get("image.png", [])) == 0
+
+    def test_no_newline_at_eof(self) -> None:
+        diff = (
+            "diff --git a/f.py b/f.py\n"
+            "--- a/f.py\n"
+            "+++ b/f.py\n"
+            "@@ -1,1 +1,1 @@\n"
+            "-old\n"
+            "\\ No newline at end of file\n"
+            "+new\n"
+            "\\ No newline at end of file\n"
+        )
+        parser = DiffParser()
+        result = parser.parse(diff)
+        assert "f.py" in result.files
+
+    def test_filename_with_spaces(self) -> None:
+        diff = (
+            'diff --git "a/my file.py" "b/my file.py"\n'
+            "--- a/my file.py\n"
+            "+++ b/my file.py\n"
+            "@@ -1,1 +1,1 @@\n"
+            "-a\n"
+            "+b\n"
+        )
+        parser = DiffParser()
+        result = parser.parse(diff)
+        assert len(result.files) > 0
