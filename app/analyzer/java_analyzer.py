@@ -111,6 +111,7 @@ class JavaAnalyzer(ASTAnalyzer):
         findings.extend(_JavaSQLConcatDetector(filename).run(tree_nodes))
         findings.extend(_JavaResourceLeakDetector(filename).run(tree_nodes))
         findings.extend(_JavaHardcodedSecretDetector(filename).run(tree_nodes))
+        findings.extend(_JavaComplexityDetector(filename).run(tree_nodes))
 
         return ASTResult(
             language="java",
@@ -337,5 +338,69 @@ class _JavaHardcodedSecretDetector:
     def _matches_secret_pattern(cls, name: str) -> bool:
         for pattern in cls._SECRET_PATTERNS:
             if pattern in name:
+                return True
+        return False
+
+
+class _JavaComplexityDetector:
+    """Flag Java methods with high cyclomatic complexity — rule java-complexity."""
+
+    _THRESHOLD = 10
+
+    _DECISION_TYPES = (
+        javalang.tree.IfStatement,
+        javalang.tree.ForStatement,
+        javalang.tree.WhileStatement,
+        javalang.tree.DoStatement,
+        javalang.tree.SwitchStatementCase,
+        javalang.tree.CatchClause,
+        javalang.tree.TernaryExpression,
+    )
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def run(self, nodes: list[Tuple[Any, Any]]) -> list[ASTFinding]:
+        findings: list[ASTFinding] = []
+
+        for path, node in nodes:
+            if isinstance(node, (javalang.tree.MethodDeclaration, javalang.tree.ConstructorDeclaration)):
+                complexity = self._compute_complexity(nodes, node)
+                if complexity > self._THRESHOLD:
+                    findings.append(
+                        ASTFinding(
+                            rule_id="java-complexity",
+                            severity="warning",
+                            category="style",
+                            file_path=self.filename,
+                            line_start=node.position.line if node.position else 1,
+                            line_end=node.position.line if node.position else 1,
+                            title=f"High cyclomatic complexity ({complexity}) in method '{node.name}'",
+                            description=(
+                                f"Method '{node.name}' has a cyclomatic complexity "
+                                f"of {complexity} (threshold: {self._THRESHOLD}). "
+                                "Consider refactoring into smaller methods."
+                            ),
+                        )
+                    )
+        return findings
+
+    def _compute_complexity(
+        self, nodes: list[Tuple[Any, Any]], method_node: Any
+    ) -> int:
+        count = 1
+        for path, node in nodes:
+            if isinstance(node, self._DECISION_TYPES):
+                if self._in_subtree(path, method_node):
+                    count += 1
+            elif isinstance(node, javalang.tree.BinaryOperation):
+                if node.operator in ("&&", "||") and self._in_subtree(path, method_node):
+                    count += 1
+        return count
+
+    @staticmethod
+    def _in_subtree(path: Tuple[Any, ...], method_node: Any) -> bool:
+        for p in path:
+            if p is method_node:
                 return True
         return False
