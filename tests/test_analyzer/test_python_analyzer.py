@@ -319,3 +319,43 @@ class TestShellInjectionRule:
         result = a.analyze_file("test.py", "os.path.join('/a', 'b')\nos.getcwd()")
         findings = [f for f in result.findings if f.rule_id == "python-shell-injection"]
         assert len(findings) == 0
+
+
+class TestSQLConcatRule:
+    def test_detect_execute_with_string_concat(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "cursor.execute('SELECT * FROM t WHERE id=' + uid)")
+        assert any(f.rule_id == "python-sql-concat" for f in result.findings)
+
+    def test_detect_execute_with_fstring(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", 'cursor.execute(f"SELECT * FROM {table}")')
+        assert any(f.rule_id == "python-sql-concat" for f in result.findings)
+
+    def test_detect_execute_with_percent_format(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "cursor.execute('SELECT * FROM %s' % table)")
+        assert any(f.rule_id == "python-sql-concat" for f in result.findings)
+
+    def test_detect_executemany_with_concat(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "conn.executemany('INSERT INTO t VALUES(' + v + ')')")
+        assert any(f.rule_id == "python-sql-concat" for f in result.findings)
+
+    def test_no_alert_on_parameterized_query(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "cursor.execute('SELECT * FROM t WHERE id=?', (uid,))")
+        findings = [f for f in result.findings if f.rule_id == "python-sql-concat"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_static_query(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", "cursor.execute('SELECT COUNT(*) FROM users')")
+        findings = [f for f in result.findings if f.rule_id == "python-sql-concat"]
+        assert len(findings) == 0
+
+    def test_no_alert_on_safe_function(self) -> None:
+        a = PythonAnalyzer()
+        result = a.analyze_file("test.py", 'print("hello " + name)')
+        findings = [f for f in result.findings if f.rule_id == "python-sql-concat"]
+        assert len(findings) == 0
