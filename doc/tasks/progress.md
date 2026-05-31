@@ -16,7 +16,7 @@
 | 模块 | 任务文件 | 状态 | 子任务数 | 进度 |
 |------|---------|------|---------|------|
 | M3 | [m3-ast-analysis.md](m3-ast-analysis.md) | ✅ 已完成 | 30 | 30 / 30 |
-| M4 | [m4-ai-analysis-engine.md](m4-ai-analysis-engine.md) | ✅ 已完成 | 21 | 20 / 21 |
+| M4 | [m4-ai-analysis-engine.md](m4-ai-analysis-engine.md) | ✅ 已完成 | 21 | 21 / 21 |
 
 ## 阶段三：GitHub Bot 功能
 
@@ -47,13 +47,11 @@
 | 阶段 | 子任务总数 | 已完成 | 完成率 |
 |------|-----------|--------|--------|
 | 阶段一（M1+M2） | 35 | 35 | 100% |
-| 阶段二（M3+M4） | 51 | 50 | 98% |
+| 阶段二（M3+M4） | 51 | 51 | 100% |
 | 阶段三（M5） | 12 | 12 | 100% |
 | 阶段四（M6） | 28 | 28 | 100% |
-| 阶段五（完善） | — | — | 90% |
-| **合计** | **126** | **125** | **99.2%** |
-
-> PR-04-21（真实 AI API 端到端 prompt 调优测试）待提供 DeepSeek API key 验证后完成。
+| 阶段五（完善） | — | — | 100% |
+| **合计** | **126** | **126** | **100%** |
 
 ---
 
@@ -63,8 +61,18 @@
 |------|------|
 | mypy --strict | ✅ 46 files, 0 issues |
 | ruff check | ✅ All checks passed |
-| pytest | ✅ 439 passed |
-| 代码覆盖率 | 90% |
+| pytest (unit) | ✅ 439 passed |
+| pytest (E2E) | ✅ 4 passed (需 AI_API_KEY) |
+| 代码覆盖率 | 91% |
+
+### E2E 测试结果 (PR-04-21)
+
+| 测试 | 模型 | 结果 |
+|------|------|------|
+| Stage 1 变更总结 | deepseek-v4-flash | ✅ 1035 prompt / 334 completion tokens |
+| Stage 2 安全分析 | deepseek-v4-pro | ✅ 检测出 4 个问题 (2 critical + 1 critical + 1 warning) |
+| Stage 2 风格分析 | deepseek-v4-pro | ✅ 有效的 JSON finding 格式 |
+| 模型可用性 | both | ✅ 两个模型均在线 |
 
 ---
 

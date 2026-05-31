@@ -1,6 +1,12 @@
 from collections.abc import Generator
 
 import pytest
+
+pytest_plugins: list[str] = []
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "e2e: end-to-end test requiring real API credentials")
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 

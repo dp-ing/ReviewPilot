@@ -67,7 +67,7 @@
   - 阶段二：强模型（provider_strong）→ 4 类并行深度分析（安全/逻辑/性能/风格）
   - 合并 + 后处理
 - [x] **PR-04-20** — 编写编排器测试（Mock Provider → 两阶段流程 → 验证阶段一输出影响阶段二输入）
-- [x] **PR-04-21** — 编写端到端 prompt 调优测试（固定 PR diff → 真实 AI API → 验证 JSON 输出格式）
+- [x] **PR-04-21** — 编写端到端 prompt 调优测试（固定 PR diff → 真实 AI API → 验证 JSON 输出格式）✅ E2E 通过
 
 ---
 
