@@ -3,7 +3,7 @@ from app.core.config import Settings, get_config
 
 class TestSettings:
     def test_default_values(self) -> None:
-        cfg = Settings()
+        cfg = Settings(_env_file="", _env_file_encoding="")  # skip .env
         assert cfg.AI_API_BASE == "https://api.deepseek.com/v1"
         assert cfg.AI_DEFAULT_MODEL == "deepseek-v4-flash"
         assert cfg.AI_STRONG_MODEL == "deepseek-v4-pro"
@@ -13,7 +13,7 @@ class TestSettings:
         assert cfg.LOG_LEVEL == "INFO"
 
     def test_optional_fields_default_empty(self) -> None:
-        cfg = Settings()
+        cfg = Settings(_env_file="", _env_file_encoding="")  # skip .env
         assert cfg.GITHUB_APP_ID == ""
         assert cfg.GITHUB_APP_PRIVATE_KEY == ""
         assert cfg.SECRET_KEY == ""

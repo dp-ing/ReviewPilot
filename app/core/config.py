@@ -1,5 +1,7 @@
 from functools import lru_cache
+from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -25,6 +27,15 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
     LOG_LEVEL: str = "INFO"
     SECRET_KEY: str = ""
+
+    @field_validator("GITHUB_APP_PRIVATE_KEY", mode="before")
+    @classmethod
+    def _load_private_key(cls, v: str) -> str:
+        if v and not v.startswith("-----BEGIN") and Path(v).suffix in (".pem", ".key"):
+            path = Path(v)
+            if path.exists():
+                return path.read_text()
+        return v
 
     model_config = {
         "env_file": ".env",
