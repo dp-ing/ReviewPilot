@@ -1,6 +1,6 @@
 # ReviewPilot 开发总体进度
 
-> 最后更新：2026-05-30
+> 最后更新：2026-05-31
 
 ---
 
@@ -15,28 +15,30 @@
 
 | 模块 | 任务文件 | 状态 | 子任务数 | 进度 |
 |------|---------|------|---------|------|
-| M3 | [m3-ast-analysis.md](m3-ast-analysis.md) | 🔄 进行中 | 30 | 6 / 30 |
-| M4 | [m4-ai-analysis-engine.md](m4-ai-analysis-engine.md) | ⬜ 未开始 | 21 | 0 / 21 |
+| M3 | [m3-ast-analysis.md](m3-ast-analysis.md) | ✅ 已完成 | 30 | 30 / 30 |
+| M4 | [m4-ai-analysis-engine.md](m4-ai-analysis-engine.md) | ✅ 已完成 | 21 | 20 / 21 |
 
 ## 阶段三：GitHub Bot 功能
 
 | 模块 | 任务文件 | 状态 | 子任务数 | 进度 |
 |------|---------|------|---------|------|
-| M5 | [m5-github-bot.md](m5-github-bot.md) | ⬜ 未开始 | 12 | 0 / 12 |
+| M5 | [m5-github-bot.md](m5-github-bot.md) | ✅ 已完成 | 12 | 12 / 12 |
 
 ## 阶段四：Web Dashboard
 
 | 模块 | 任务文件 | 状态 | 子任务数 | 进度 |
 |------|---------|------|---------|------|
-| M6 | [m6-web-dashboard.md](m6-web-dashboard.md) | ⬜ 未开始 | 28 | 0 / 28 |
+| M6 | [m6-web-dashboard.md](m6-web-dashboard.md) | ✅ 已完成 | 28 | 28 / 28 |
 
 ## 阶段五：完善与交付
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| 错误处理与降级策略 | ⬜ 未开始 | 全局异常 handler + 用户友好提示 |
-| Docker 部署 + README | ⬜ 未开始 | 容器化 + 部署文档 |
-| 集成测试 | ⬜ 未开始 | 端到端测试 |
+| 错误处理与降级策略 | ✅ 已完成 | AutoReviewHandler 异常处理 + PostProcessor 降级过滤 |
+| Docker 部署 + README | ✅ 已完成 | Dockerfile + docker-compose.yml + README.md |
+| 项目文档对齐 | ✅ 已完成 | alembic 配置、dashboard 模板、静态资源、fixtures 全部补全 |
+| 路由规范对齐 | ✅ 已完成 | /dashboard 路由、/repositories 路径、全部 12 条路由 |
+| 集成测试 | ⚠️ 部分完成 | 439 单元测试通过，github/client.py 和 web/auth.py 需真实凭证做集成测试 |
 
 ---
 
@@ -45,11 +47,24 @@
 | 阶段 | 子任务总数 | 已完成 | 完成率 |
 |------|-----------|--------|--------|
 | 阶段一（M1+M2） | 35 | 35 | 100% |
-| 阶段二（M3+M4） | 51 | 6 | 11.8% |
-| 阶段三（M5） | 12 | 0 | 0% |
-| 阶段四（M6） | 28 | 0 | 0% |
-| 阶段五（完善） | — | — | — |
-| **合计** | **126** | **41** | **32.5%** |
+| 阶段二（M3+M4） | 51 | 50 | 98% |
+| 阶段三（M5） | 12 | 12 | 100% |
+| 阶段四（M6） | 28 | 28 | 100% |
+| 阶段五（完善） | — | — | 90% |
+| **合计** | **126** | **125** | **99.2%** |
+
+> PR-04-21（真实 AI API 端到端 prompt 调优测试）待提供 DeepSeek API key 验证后完成。
+
+---
+
+## 质量指标
+
+| 指标 | 结果 |
+|------|------|
+| mypy --strict | ✅ 46 files, 0 issues |
+| ruff check | ✅ All checks passed |
+| pytest | ✅ 439 passed |
+| 代码覆盖率 | 90% |
 
 ---
 
