@@ -2,44 +2,164 @@
 {% block title %}ReviewPilot — Dashboard{% endblock %}
 {% block nav_dashboard %}bg-gray-100 font-medium{% endblock %}
 {% block content %}
-<div class="mb-8">
+
+<div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
     <p class="text-gray-500 mt-1">欢迎回来，{{ user.login }}</p>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="text-sm text-gray-500">总评审数</div>
-        <div class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total_reviews|default("--") }}</div>
+<!-- Stat Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">总评审数</div>
+                <div class="text-3xl font-bold text-gray-900 mt-1">{{ stats.total_reviews | default(0) }}</div>
+            </div>
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-lg">📋</div>
+        </div>
     </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="text-sm text-gray-500">发现问题</div>
-        <div class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total_issues|default("--") }}</div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">发现问题</div>
+                <div class="text-3xl font-bold text-gray-900 mt-1">{{ stats.total_issues | default(0) }}</div>
+            </div>
+            <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 text-lg">🔍</div>
+        </div>
     </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="text-sm text-gray-500">Critical</div>
-        <div class="text-3xl font-bold text-red-600 mt-2">{{ stats.critical_count|default("--") }}</div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">严重问题</div>
+                <div class="text-3xl font-bold text-red-600 mt-1">{{ stats.critical_count | default(0) }}</div>
+            </div>
+            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600 text-lg">⚠️</div>
+        </div>
     </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="text-sm text-gray-500">活跃仓库</div>
-        <div class="text-3xl font-bold text-gray-900 mt-2">{{ stats.active_repos|default("--") }}</div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">活跃仓库</div>
+                <div class="text-3xl font-bold text-gray-900 mt-1">{{ stats.active_repos | default(0) }}</div>
+            </div>
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-lg">📦</div>
+        </div>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">问题分布</h3>
-        <canvas id="severityChart" height="200"></canvas>
+        <h3 class="text-base font-semibold text-gray-900 mb-4">问题严重级别分布</h3>
+        <div class="h-64">
+            <canvas id="severityChart"></canvas>
+        </div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">趋势</h3>
-        <canvas id="trendChart" height="200"></canvas>
+        <h3 class="text-base font-semibold text-gray-900 mb-4">问题类别分布</h3>
+        <div class="h-64">
+            <canvas id="categoryChart"></canvas>
+        </div>
     </div>
 </div>
+
+<!-- Quick Links -->
+<div class="flex flex-wrap gap-3">
+    <a href="/dashboard" class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors">
+        📊 完整仪表盘
+    </a>
+    <a href="/reviews" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors">
+        📋 评审记录
+    </a>
+    <a href="/repositories" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors">
+        ⚙️ 仓库管理
+    </a>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Placeholder — will be populated with real data via HTMX
+(function() {
+    const severities = {{ by_severity | tojson | safe if by_severity else '{}' }};
+    const categories = {{ by_category | tojson | safe if by_category else '{}' }};
+
+    // Severity Doughnut
+    const sevCtx = document.getElementById('severityChart');
+    if (sevCtx) {
+        new Chart(sevCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'Warning', 'Suggestion'],
+                datasets: [{
+                    data: [
+                        severities.critical || 0,
+                        severities.warning || 0,
+                        severities.suggestion || 0,
+                    ],
+                    backgroundColor: ['#EF4444', '#F59E0B', '#9CA3AF'],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 20, usePointStyle: true, pointStyleWidth: 8 },
+                    }
+                },
+                cutout: '65%',
+            }
+        });
+    }
+
+    // Category Bar
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx) {
+        const labels = Object.keys(categories);
+        const values = Object.values(categories);
+        const colorMap = {
+            security: '#EF4444',
+            logic: '#8B5CF6',
+            performance: '#F59E0B',
+            style: '#3B82F6',
+            best_practice: '#10B981',
+        };
+        new Chart(catCtx, {
+            type: 'bar',
+            data: {
+                labels: labels.length ? labels : ['暂无数据'],
+                datasets: [{
+                    label: '问题数',
+                    data: values.length ? values : [0],
+                    backgroundColor: labels.map(l => colorMap[l] || '#6B7280'),
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 },
+                        grid: { color: '#F3F4F6' },
+                    },
+                    x: {
+                        grid: { display: false },
+                    },
+                },
+            }
+        });
+    }
+})();
 </script>
 {% endblock %}
