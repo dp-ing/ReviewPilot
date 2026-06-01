@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from app.core.logging import get_logger
 from app.github.schemas import IssueCommentEvent
@@ -25,7 +25,7 @@ class CommandHandler:
     def __init__(
         self,
         collaborator_checker: Optional[Callable[[str, str, str], bool]] = None,
-        on_review_command: Optional[Callable[[str, str, int, Optional[list[str]]], None]] = None,
+        on_review_command: Optional[Callable[[str, str, int, Optional[list[str]], int], None]] = None,
         on_permission_denied: Optional[Callable[[str, str, int], None]] = None,
     ) -> None:
         self._collaborator_checker = collaborator_checker
@@ -76,10 +76,15 @@ class CommandHandler:
                     self._on_permission_denied(event.owner, event.repo, event.pr_number)
                 return True  # Command matched, but denied
 
+        # Extract installation_id from raw payload
+        raw: dict[str, Any] = getattr(event, "raw_payload", {}) or {}
+        installation: dict[str, Any] = raw.get("installation", {}) or {}
+        installation_id: int = installation.get("id", 0)
+
         # Execute review
         if self._on_review_command is not None:
             self._on_review_command(
-                event.owner, event.repo, event.pr_number, categories
+                event.owner, event.repo, event.pr_number, categories, installation_id
             )
 
         return True

@@ -5,6 +5,7 @@ import re
 import time
 from typing import Any, Callable, Optional, Tuple
 
+from app.core.logging import get_logger
 from app.engine.context_builder import ContextBuilder
 from app.engine.post_processor import PostProcessor
 from app.engine.prompts.stage1 import build_stage1_prompt
@@ -45,6 +46,8 @@ _STAGE2_BUILDERS: dict[str, Tuple[Callable[..., str], set[str]]] = {
 
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
 
+logger = get_logger(__name__)
+
 
 class AnalysisOrchestrator:
     """Two-phase PR analysis orchestrator.
@@ -71,17 +74,12 @@ class AnalysisOrchestrator:
         token_budget: int = 4000,
         enabled_directions: Optional[list[str]] = None,
     ) -> AnalysisResult:
-        """Run the full two-phase analysis on a PR.
-
-        Args:
-            pr_detail: PR metadata dict with keys like pr_title, pr_description,
-                       diff_text, changed_files, ast_summary, project_info.
-            token_budget: Maximum token budget for context building.
-            enabled_directions: Specific directions to analyze, or None for all
-                                from Phase 1 recommendation.
-        """
+        """Run the full two-phase analysis on a PR."""
         start_time = time.perf_counter()
         total_tokens: dict[str, int] = {}
+        pr_url = pr_detail.get("pr_url", "")
+
+        logger.info("analysis_phase1_start", url=pr_url)
 
         # Build context
         ctx = self.context_builder.build(pr_detail, token_budget)
@@ -124,11 +122,16 @@ class AnalysisOrchestrator:
         total_tokens["phase1"] = tokens_used
 
         phase1_result = self._parse_phase1(phase1_response.content)
+        logger.info(
+            "analysis_phase1_done",
+            risk=phase1_result.risk_level,
+            directions=phase1_result.analysis_directions,
+            tokens=tokens_used,
+        )
 
         # Phase 2: Deep analysis per direction
         directions = enabled_directions or phase1_result.analysis_directions
         if not directions:
-            # Default to all directions
             directions = ["security", "logic", "performance", "style"]
 
         all_findings: list[EngineFinding] = []
@@ -136,6 +139,7 @@ class AnalysisOrchestrator:
             if direction not in _STAGE2_BUILDERS:
                 continue
 
+            logger.info("analysis_phase2_start", direction=direction)
             builder, param_names = _STAGE2_BUILDERS[direction]
             kwargs: dict[str, Any] = {
                 "pr_title": pr_title,
@@ -161,9 +165,16 @@ class AnalysisOrchestrator:
 
             findings = self._parse_findings(phase2_response.content)
             all_findings.extend(findings)
+            logger.info(
+                "analysis_phase2_done",
+                direction=direction,
+                findings=len(findings),
+                tokens=phase2_response.usage.get("total_tokens", 0),
+            )
 
         # Post-process
         processed = self.post_processor.process(all_findings)
+        logger.info("analysis_postprocess_done", before=len(all_findings), after=len(processed))
 
         # Build stats
         by_severity: dict[str, int] = {}
@@ -173,6 +184,7 @@ class AnalysisOrchestrator:
             by_category[f.category] = by_category.get(f.category, 0) + 1
 
         duration_ms = int((time.perf_counter() - start_time) * 1000)
+        logger.info("analysis_complete", duration_ms=duration_ms, total_findings=len(processed))
 
         stats = AnalysisStats(
             total_findings=len(processed),

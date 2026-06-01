@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
@@ -66,17 +67,22 @@ class EventRouter:
 
         # Route
         if isinstance(event, (PROpenEvent, PRSyncEvent)):
+            logger.info("routing_to_auto_review", event_type=event_type, pr=event.pr_number)
             if self.auto_review_handler is not None:
-                self.auto_review_handler(event)
+                threading.Thread(target=self.auto_review_handler, args=(event,), daemon=True).start()
             return WebhookResponse(
                 status_code=200,
                 body={"message": "Review triggered"},
             )
 
         if isinstance(event, IssueCommentEvent):
+            logger.info("routing_to_command", event_type=event_type, body=event.comment_body[:100])
             if self.command_handler is not None:
-                self.command_handler(event)
-            return WebhookResponse(status_code=200, body={"message": "Command processed"})
+                threading.Thread(target=self.command_handler, args=(event,), daemon=True).start()
+                logger.info("command_dispatched")
+            else:
+                logger.warning("command_handler_is_none")
+            return WebhookResponse(status_code=200, body={"message": "Command received"})
 
         # Other events — acknowledged but not processed
         event_type_str = event.event_type if event else "unknown"

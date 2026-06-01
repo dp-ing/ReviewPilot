@@ -76,6 +76,25 @@ class GitHubClient:
         assert self._gh is not None
         return self._gh
 
+    def get_repo_info(self, owner: str, repo: str) -> dict[str, Any]:
+        """Get repository info for DB persistence."""
+        try:
+            gh_repo = self._github.get_repo(f"{owner}/{repo}")
+            return {
+                "github_repo_id": gh_repo.id,
+                "name": gh_repo.name,
+                "full_name": gh_repo.full_name,
+                "owner": gh_repo.owner.login if gh_repo.owner else owner,
+                "html_url": gh_repo.html_url,
+                "default_branch": gh_repo.default_branch,
+                "language": gh_repo.language,
+            }
+        except GithubException as e:
+            raise GitHubAPIError(
+                f"Failed to get repo {owner}/{repo}: {e.status}",
+                detail=str(e),
+            )
+
     def get_pr(self, owner: str, repo: str, pr_number: int) -> PRDetail:
         try:
             gh_repo = self._github.get_repo(f"{owner}/{repo}")
