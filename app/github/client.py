@@ -46,7 +46,8 @@ class GitHubClient:
         )
 
         try:
-            with httpx.Client(timeout=30.0) as client:
+            proxy = self._config.HTTP_PROXY or None
+            with httpx.Client(timeout=30.0, proxy=proxy) as client:
                 resp = client.post(
                     url,
                     headers={

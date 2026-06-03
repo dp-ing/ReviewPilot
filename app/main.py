@@ -1,3 +1,4 @@
+import os
 import threading
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
@@ -102,6 +103,12 @@ def _router_handler(event: object) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    if config.HTTP_PROXY:
+        os.environ["HTTP_PROXY"] = config.HTTP_PROXY
+        os.environ["HTTPS_PROXY"] = config.HTTPS_PROXY
+        os.environ["NO_PROXY"] = "localhost,127.0.0.1"
+        logger.info("proxy_configured", http=config.HTTP_PROXY)
+
     logger.info("app_starting", host=config.APP_HOST, port=config.APP_PORT)
     await init_db()
     logger.info("database_initialized")
