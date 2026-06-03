@@ -1,4 +1,12 @@
 {# config_form.html — repository configuration form #}
+{% if config and config.confidence_threshold >= 0.9 %}
+  {% set sensitivity = "low" %}
+{% elif config and config.confidence_threshold >= 0.7 %}
+  {% set sensitivity = "medium" %}
+{% else %}
+  {% set sensitivity = "high" %}
+{% endif %}
+{% set all_categories = ["security", "logic", "performance", "style", "best_practice"] %}
 <div class="bg-white rounded-xl border border-gray-200 p-6">
     <form hx-put="/api/repositories/{{ repo.id }}/config" hx-target="#form-result" method="post">
         <div class="mb-6">
@@ -16,22 +24,22 @@
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-900 mb-2">敏感度级别</label>
             <select name="sensitivity" class="px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-blue-500">
-                <option value="low" {% if config and config.sensitivity == "low" %}selected{% endif %}>低 — 仅报告高置信度问题</option>
-                <option value="medium" {% if config and config.sensitivity == "medium" %}selected{% endif %}>中 — 平衡检测</option>
-                <option value="high" {% if not config or config.sensitivity == "high" %}selected{% endif %}>高 — 报告所有可疑问题</option>
+                <option value="low" {% if sensitivity == "low" %}selected{% endif %}>低 — 仅报告高置信度问题</option>
+                <option value="medium" {% if sensitivity == "medium" %}selected{% endif %}>中 — 平衡检测</option>
+                <option value="high" {% if sensitivity == "high" %}selected{% endif %}>高 — 报告所有可疑问题</option>
             </select>
         </div>
 
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-900 mb-2">启用类别</label>
             <div class="flex flex-wrap gap-3">
-                {% for cat in ["security", "logic", "performance", "style"] %}
+                {% for cat in all_categories %}
                 <label class="flex items-center gap-1.5">
                     <input type="checkbox" name="enabled_categories" value="{{ cat }}"
-                           {% if not config or cat in (config.enabled_categories or ["security", "logic", "performance", "style"]) %}checked{% endif %}
+                           {% if not config or cat in (config.enabled_categories or all_categories) %}checked{% endif %}
                            class="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="text-sm text-gray-700">
-                        {% if cat == "security" %}🔒 安全{% elif cat == "logic" %}🧠 逻辑{% elif cat == "performance" %}⚡ 性能{% else %}🎨 风格{% endif %}
+                        {% if cat == "security" %}🔒 安全{% elif cat == "logic" %}🧠 逻辑{% elif cat == "performance" %}⚡ 性能{% elif cat == "best_practice" %}✅ 最佳实践{% else %}🎨 风格{% endif %}
                     </span>
                 </label>
                 {% endfor %}
