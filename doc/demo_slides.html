@@ -10,11 +10,9 @@ body{
   font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;
   background:#0b1120;color:#e2e8f0;overflow:hidden;user-select:none;
 }
-/* ── slide container ── */
 .slide{display:none;width:100vw;height:100vh;padding:60px 100px;flex-direction:column;justify-content:center;position:relative}
 .slide.active{display:flex}
 
-/* ── typography ── */
 h1{font-size:62px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:16px}
 h1 span{background:linear-gradient(135deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 h2{font-size:42px;font-weight:700;margin-bottom:36px;color:#f1f5f9;position:relative}
@@ -23,18 +21,15 @@ h3{font-size:24px;font-weight:600;margin-bottom:12px;color:#e2e8f0}
 p,li{font-size:22px;line-height:1.7;color:#94a3b8}
 ul{padding-left:32px} li{margin-bottom:8px}
 
-/* ── cards ── */
 .card{background:linear-gradient(135deg,#1e293b,#1a2340);border:1px solid #1e3a5f;border-radius:20px;padding:32px;transition:transform .2s}
 .card:hover{transform:translateY(-2px)}
 .card h3{color:#38bdf8;font-size:22px}
 .card p{font-size:18px;color:#94a3b8}
 
-/* ── grid ── */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:30px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px}
 .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px}
 
-/* ── badges ── */
 .badge{display:inline-block;padding:5px 16px;border-radius:20px;font-size:16px;font-weight:600;letter-spacing:.5px}
 .bg-red{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
 .bg-amber{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
@@ -42,53 +37,44 @@ ul{padding-left:32px} li{margin-bottom:8px}
 .bg-green{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
 .bg-blue{background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.3)}
 
-/* ── tags ── */
 .tag{display:inline-block;background:rgba(30,41,59,.8);border:1px solid #334155;padding:8px 20px;border-radius:10px;font-size:18px;margin:5px;color:#cbd5e1}
 .tag.hl{border-color:#38bdf8;color:#38bdf8;background:rgba(56,189,248,.08)}
 
-/* ── numbers ── */
 .big-num{font-size:72px;font-weight:900;background:linear-gradient(135deg,#38bdf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
 .big-num-label{font-size:18px;color:#94a3b8;margin-top:8px}
 
-/* ── flow ── */
 .flow-row{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap}
 .flow-box{background:#1e293b;border:2px solid #334155;border-radius:14px;padding:18px 28px;text-align:center;font-size:18px;min-width:160px}
 .flow-box.hl{border-color:#38bdf8;background:rgba(56,189,248,.06)}
 .flow-arrow{font-size:32px;color:#475569;font-weight:bold}
 
-/* ── progress bar ── */
 .progress-wrap{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px}
 .progress-dot{width:10px;height:10px;border-radius:50%;background:#334155;transition:all .3s}
 .progress-dot.active{background:#38bdf8;box-shadow:0 0 10px rgba(56,189,248,.5);width:28px;border-radius:6px}
 .progress-text{font-size:16px;color:#64748b;min-width:70px;text-align:center}
 
-/* ── highlight section ── */
 .hl-box{background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));border:1px solid rgba(56,189,248,.25);border-radius:20px;padding:28px 36px;margin-top:24px}
 
-/* ── title slide ── */
 .title-sub{font-size:22px;color:#94a3b8;margin-bottom:8px;letter-spacing:2px;text-transform:uppercase}
 .title-desc{font-size:26px;color:#94a3b8;margin:28px 0 36px;line-height:1.6;max-width:700px}
 
-/* ── two-col layout ── */
 .col-left{flex:1;padding-right:40px}
 .col-right{flex:1;padding-left:40px;border-left:1px solid #1e3a5f}
 .split-row{display:flex;gap:0}
 
-/* ── step number ── */
 .step{display:flex;align-items:flex-start;gap:18px;margin-bottom:14px}
 .step-num{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#38bdf8,#818cf8);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
 .step-content h4{font-size:20px;color:#e2e8f0;margin-bottom:4px}
 .step-content p{font-size:16px;color:#94a3b8}
 
-/* ── table ── */
 table{border-collapse:collapse;width:100%;font-size:17px}
 th,td{border:1px solid #1e3a5f;padding:10px 16px;text-align:left}
 th{background:rgba(56,189,248,.08);color:#38bdf8;font-weight:600}
 td{color:#cbd5e1}
 
-/* ── emphasis ── */
 em{font-style:normal;color:#38bdf8;font-weight:600}
 strong{color:#f1f5f9}
+.role-label{font-size:14px;color:#64748b;display:block;margin-top:2px}
 </style>
 </head>
 <body>
@@ -105,10 +91,10 @@ strong{color:#f1f5f9}
     </div>
     <div>
       <span class="tag hl">两阶段 AI 分析</span>
-      <span class="tag hl">18 条 AST 规则</span>
+      <span class="tag hl">9 条 AST 规则</span>
       <span class="tag hl">行级评论</span>
-      <span class="tag hl">5 类检测</span>
-      <span class="tag hl">Docker 部署</span>
+      <span class="tag hl">4 类检测</span>
+      <span class="tag hl">跨仓库管理</span>
     </div>
   </div>
 </div>
@@ -145,43 +131,48 @@ strong{color:#f1f5f9}
 
 <!-- ═══════════ S3: Architecture ═══════════ -->
 <div class="slide" id="s3">
-  <h2>系统架构总览</h2>
-  <div class="flow-row" style="margin-bottom:40px">
-    <div class="flow-box hl"><strong>GitHub</strong><br><span style="font-size:14px;color:#94a3b8">Webhook 事件源</span></div>
+  <h2>系统架构：四个关键角色</h2>
+
+  <div class="flow-row" style="margin-bottom:32px">
+    <div class="flow-box hl"><strong>GitHub</strong><br><span class="role-label">事件源 + 展示层</span></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-box hl"><strong>FastAPI</strong><br><span style="font-size:14px;color:#94a3b8">事件路由 + REST API</span></div>
+    <div class="flow-box"><strong>ngrok</strong><br><span class="role-label">公网隧道</span></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-box hl"><strong>AI Engine</strong><br><span style="font-size:14px;color:#94a3b8">两阶段深度分析</span></div>
+    <div class="flow-box hl"><strong>FastAPI</strong><br><span class="role-label">事件路由 + AI 引擎</span></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-box"><strong>Bot + Dashboard</strong><br><span style="font-size:14px;color:#94a3b8">双形态输出</span></div>
+    <div class="flow-box"><strong>Dashboard</strong><br><span class="role-label">管理面板</span></div>
   </div>
+
+  <p style="font-size:18px;color:#64748b;text-align:center;margin-bottom:32px">
+    Webhook <em>只送元数据</em>（event_type + PR 编号）→ 后端 <em>主动请求</em> GitHub API 拉取 diff + 文件内容
+  </p>
 
   <div class="g3">
     <div class="card" style="text-align:center">
       <div style="font-size:30px;margin-bottom:8px">⚡</div>
       <h3>Stage 1 快速初筛</h3>
       <p><em>deepseek-v4-flash</em></p>
-      <p>变更总结 + 风险标记 + 分析方向建议</p>
+      <p>变更总结 + 风险评级 + 分析方向建议</p>
       <p style="color:#38bdf8;font-size:15px;margin-top:8px">目标 &lt; 10 秒 · 低成本</p>
     </div>
     <div class="card" style="text-align:center">
       <div style="font-size:30px;margin-bottom:8px">🧠</div>
       <h3>Stage 2 深度分析</h3>
       <p><em>deepseek-v4-pro</em></p>
-      <p>安全 · 逻辑 · 性能 · 风格 四类并行</p>
-      <p style="color:#38bdf8;font-size:15px;margin-top:8px">根据风险级别决定深度</p>
+      <p>安全 · 逻辑 · 性能 · 风格 — 四类并行</p>
+      <p style="color:#38bdf8;font-size:15px;margin-top:8px">根据风险级别决定分析深度</p>
     </div>
     <div class="card" style="text-align:center">
       <div style="font-size:30px;margin-bottom:8px">📋</div>
-      <h3>后处理管道</h3>
-      <p>合并 AST + AI findings</p>
-      <p>去重 → 置信度过滤 → 忽略规则 → 排序</p>
-      <p style="color:#38bdf8;font-size:15px;margin-top:8px">误报率可控</p>
+      <h3>后处理 + 持久化</h3>
+      <p>AST + AI findings 合并去重</p>
+      <p>Repository → PR → ReviewRecord → ReviewIssue</p>
+      <p style="color:#38bdf8;font-size:15px;margin-top:8px">全链路 DB 持久化</p>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ S4: Two-Stage AI (KEY FEATURE - detailed) ═══════════ -->
+<!-- ═══════════ S4: Two-Stage AI (KEY FEATURE) ═══════════ -->
 <div class="slide" id="s4">
   <h2>核心引擎：两阶段 AI 分析</h2>
   <p style="font-size:20px;color:#94a3b8;margin-bottom:32px">为什么分两阶段？如果对每个 PR 都用最强模型全量分析，<em>成本太高、延迟太大</em>。先用快模型初筛，再用强模型针对性深度分析。</p>
@@ -190,14 +181,14 @@ strong{color:#f1f5f9}
     <div class="col-left">
       <h3 style="color:#38bdf8;font-size:26px">⚡ Stage 1 · 快模型</h3>
       <p style="font-size:18px;color:#94a3b8;margin-bottom:20px">deepseek-v4-flash · 目标 &lt; 10 秒</p>
-      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>接收 PR 元信息 + diff + AST 结果</h4></div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>接收 PR 标题 + diff 摘要 + 变更文件列表</h4></div></div>
       <div class="step"><div class="step-num">2</div><div class="step-content"><h4>生成变更总结（中文/英文可配）</h4></div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>标记高风险文件 + 分析方向建议</h4></div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-content"><h4>输出 risk_level 评级（low/medium/high/critical）</h4></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>标记高风险文件 + 输出 risk_level 评级</h4></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><h4>建议 Stage 2 分析方向（如只分析 security+logic）</h4></div></div>
     </div>
     <div class="col-right">
       <h3 style="color:#38bdf8;font-size:26px">🧠 Stage 2 · 强模型</h3>
-      <p style="font-size:18px;color:#94a3b8;margin-bottom:20px">deepseek-v4-pro · 四类别并行分析</p>
+      <p style="font-size:18px;color:#94a3b8;margin-bottom:20px">deepseek-v4-pro · 四类别并行 · 独立 prompt 模板</p>
       <div class="step"><div class="step-num">🔒</div><div class="step-content"><h4>Security 安全</h4><p>SQL 注入 · XSS · 敏感信息泄露 · 权限绕过 · 不安全反序列化</p></div></div>
       <div class="step"><div class="step-num">🧩</div><div class="step-content"><h4>Logic 逻辑</h4><p>空指针 · 边界条件 · 异常处理 · 死锁风险 · 状态不一致</p></div></div>
       <div class="step"><div class="step-num">⚡</div><div class="step-content"><h4>Performance 性能</h4><p>N+1 查询 · 内存泄漏 · 阻塞 IO · 不必要对象创建 · 算法复杂度</p></div></div>
@@ -206,87 +197,77 @@ strong{color:#f1f5f9}
   </div>
 </div>
 
-<!-- ═══════════ S5: AST Rules (KEY FEATURE - detailed) ═══════════ -->
+<!-- ═══════════ S5: AST Rules (KEY FEATURE) ═══════════ -->
 <div class="slide" id="s5">
   <h2>AST 确定性规则引擎</h2>
-  <p style="font-size:20px;color:#94a3b8;margin-bottom:32px"><em>AI 有幻觉风险</em>，可能漏掉确定性安全问题。AST 做精确语法检测，AI 做上下文理解，<strong>两者互补</strong>。</p>
+  <p style="font-size:20px;color:#94a3b8;margin-bottom:32px"><em>AI 有幻觉风险</em>，可能漏掉确定性安全问题。AST 用 Python <em>ast</em> 模块解析源码为语法树，<em>9 个 NodeVisitor</em> 遍历节点精确匹配。AST 做"有没有"的确定判断，AI 做"危不危险"的上下文判断，<strong>两者互补</strong>。</p>
 
   <div class="split-row">
     <div class="col-left">
-      <h3 style="color:#38bdf8;font-size:24px;margin-bottom:16px">Python · 10 条规则</h3>
+      <h3 style="color:#38bdf8;font-size:24px;margin-bottom:16px">Python · 9 条规则</h3>
       <table>
         <tr><th>规则</th><th>级别</th><th>类别</th></tr>
         <tr><td>exec / eval 动态执行</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
-        <tr><td>pickle 不安全反序列化</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
+        <tr><td>pickle.loads() 反序列化</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
         <tr><td>subprocess shell=True</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
-        <tr><td>SQL 字符串拼接</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
+        <tr><td>SQL 字符串拼接（f/+ 传给 .execute）</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
         <tr><td>硬编码密钥/密码</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
-        <tr><td>裸 except 捕获所有异常</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
-        <tr><td>文件操作缺少 with</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
+        <tr><td>裸 except 无异常类型</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
+        <tr><td>open() 无 with 语句</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
         <tr><td>圈复杂度 &gt; 15</td><td><span class="badge bg-amber">Warning</span></td><td>风格</td></tr>
         <tr><td>函数长度 &gt; 50 行</td><td><span class="badge bg-gray">Suggestion</span></td><td>风格</td></tr>
-        <tr><td>重复代码块</td><td><span class="badge bg-gray">Suggestion</span></td><td>风格</td></tr>
       </table>
     </div>
     <div class="col-right">
-      <h3 style="color:#38bdf8;font-size:24px;margin-bottom:16px">Java · 8 条规则</h3>
-      <table>
-        <tr><th>规则</th><th>级别</th><th>类别</th></tr>
-        <tr><td>Runtime.exec() 命令注入</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
-        <tr><td>ObjectInputStream 反序列化</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
-        <tr><td>Statement SQL 拼接</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
-        <tr><td>资源未用 try-with-resources</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
-        <tr><td>硬编码密钥/密码</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
-        <tr><td>方法圈复杂度 &gt; 15</td><td><span class="badge bg-amber">Warning</span></td><td>风格</td></tr>
-        <tr><td>方法长度 &gt; 50 行</td><td><span class="badge bg-gray">Suggestion</span></td><td>风格</td></tr>
-        <tr><td>未处理异常抛出</td><td><span class="badge bg-gray">Suggestion</span></td><td>风格</td></tr>
-      </table>
+      <h3 style="color:#38bdf8;font-size:24px;margin-bottom:16px">误报控制（内置于检测器）</h3>
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4>已知测试值过滤</h4><p>test_password / example_key / changeme 等不会触发硬编码密钥告警</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>ORM 调用识别</h4><p>SQLAlchemy 的 execute() 参数化查询不会被误报为 SQL 注入</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>安全上下文字段</h4><p>with open() 不会触发资源泄漏；不含 shell=True 的 subprocess 不会告警</p></div></div>
     </div>
-  </div>
-
-  <div class="hl-box" style="text-align:center;margin-top:16px">
-    <p style="font-size:18px">每个规则都有<strong>"不应触发"</strong>的测试用例 — 例如 SQLAlchemy ORM 调用不会被误报为 SQL 注入</p>
   </div>
 </div>
 
-<!-- ═══════════ S6: GitHub Bot Flow (KEY FEATURE - detailed) ═══════════ -->
+<!-- ═══════════ S6: GitHub Bot Flow (KEY FEATURE) ═══════════ -->
 <div class="slide" id="s6">
   <h2>GitHub Bot 评审全流程</h2>
-  <p style="font-size:20px;color:#94a3b8;margin-bottom:28px">从 PR 提交到评论创建，<em>全自动 6 步链路</em></p>
+  <p style="font-size:18px;color:#94a3b8;margin-bottom:24px">从 PR 提交到评论创建，<em>全自动 6 步链路</em>，关键设计：<em>后台线程</em>处理避免 10s 超时</p>
 
-  <div class="g3" style="margin-bottom:24px">
+  <div class="g3" style="margin-bottom:20px">
     <div class="card">
       <div style="font-size:28px;margin-bottom:8px">1</div>
       <h3>事件接收</h3>
-      <p>PR opened / reopened / sync → GitHub 推送 Webhook → <em>HMAC-SHA256</em> 签名验证</p>
+      <p>GitHub Webhook POST → <em>ngrok 隧道</em> → FastAPI → HMAC-SHA256 签名验证</p>
+      <p style="font-size:14px;color:#64748b;margin-top:4px">Webhook 只含元数据，不含代码</p>
     </div>
     <div class="card">
       <div style="font-size:28px;margin-bottom:8px">2</div>
-      <h3>数据拉取</h3>
-      <p>通过 GitHub API 获取 PR diff、文件变更列表、完整文件内容、仓库结构</p>
+      <h3>事件路由 + 后台线程</h3>
+      <p>EventRouter 解析 event_type → 路由到 AutoReviewHandler 或 CommandHandler</p>
+      <p style="font-size:14px;color:#38bdf8;margin-top:4px">后台 daemon 线程 · 主线程立刻返回 200</p>
     </div>
     <div class="card">
       <div style="font-size:28px;margin-bottom:8px">3</div>
-      <h3>上下文构建</h3>
-      <p>Token 预算管理（8K）→ diff 40% + AST 20% + 文件 20% + 项目 10% + 缓冲 10%</p>
+      <h3>数据拉取</h3>
+      <p>JWT → Installation Token → GitHub API 主动拉：PR 详情 + diff patch + 完整文件</p>
+      <p style="font-size:14px;color:#64748b;margin-top:4px">后端主动请求，非 Webhook 推送</p>
     </div>
   </div>
 
   <div class="g3">
     <div class="card">
       <div style="font-size:28px;margin-bottom:8px">4</div>
-      <h3>AI 分析</h3>
-      <p>Stage 1 快速总结 → Stage 2 四类并行深度分析 → <em>结构化 JSON 输出</em></p>
+      <h3>上下文构建 + AI 分析</h3>
+      <p>ContextBuilder 8K token 预算管理 → Stage 1 快模型 → Stage 2 四类并行深度分析</p>
     </div>
     <div class="card">
       <div style="font-size:28px;margin-bottom:8px">5</div>
-      <h3>后处理</h3>
-      <p>AST + AI 合并 → 同文件同规则去重 → 置信度过滤 → 忽略规则 → 排序</p>
+      <h3>后处理 + DB 持久化</h3>
+      <p>AST + AI 合并去重 → 置信度过滤 → 写入 Repository/PR/ReviewRecord/ReviewIssue 表</p>
     </div>
     <div class="card">
       <div style="font-size:28px;margin-bottom:8px">6</div>
       <h3>评论创建</h3>
-      <p>Diff hunk 行号映射 → <em>行级评论</em> + <em>总结报告</em> → 异常降级为对话评论</p>
+      <p>DiffParser 解析 diff hunk → <em>行号映射</em> → 行级评论 + 总结报告 → 降级兜底</p>
     </div>
   </div>
 </div>
@@ -300,11 +281,11 @@ strong{color:#f1f5f9}
       <h3 style="font-size:28px">自动评审</h3>
       <p style="font-size:20px;margin-top:12px">PR 打开 / 推送新代码 / 重新打开</p>
       <ul style="font-size:19px;margin-top:12px">
-        <li>创建 ReviewRecord（status=pending）</li>
+        <li>pull_request webhook → EventRouter 路由</li>
+        <li>后台线程创建 AutoReviewHandler</li>
         <li>检查仓库 auto_review 配置</li>
-        <li>完整 6 步分析流程</li>
-        <li>行级评论 + 总结报告</li>
-        <li>异常处理（PRTooLarge / AI API Error）→ 评论提示，不崩溃</li>
+        <li>完整 6 步分析 + 行级评论 + 总结</li>
+        <li>异常兜底（PRTooLarge / AI Error）→ 评论提示</li>
       </ul>
     </div>
     <div class="card" style="padding:40px">
@@ -312,10 +293,10 @@ strong{color:#f1f5f9}
       <h3 style="font-size:28px">手动 /review 命令</h3>
       <p style="font-size:20px;margin-top:12px">在 PR 评论区输入指令</p>
       <ul style="font-size:19px;margin-top:12px">
-        <li><code style="background:#0b1120;color:#38bdf8;padding:2px 8px;border-radius:4px">/review</code> — 全量分析</li>
+        <li><code style="background:#0b1120;color:#38bdf8;padding:2px 8px;border-radius:4px">/review</code> — 全量分析（4 类）</li>
         <li><code style="background:#0b1120;color:#38bdf8;padding:2px 8px;border-radius:4px">/review focus:security</code> — 仅安全</li>
         <li><code style="background:#0b1120;color:#38bdf8;padding:2px 8px;border-radius:4px">/review focus:security,logic</code> — 安全 + 逻辑</li>
-        <li>权限校验：仅仓库协作者可触发</li>
+        <li>CommandHandler 正则匹配 → 提取 installation_id → 后台线程执行</li>
       </ul>
     </div>
   </div>
@@ -327,10 +308,10 @@ strong{color:#f1f5f9}
   <div class="g2">
     <div class="card">
       <h3>🔴 行级评论</h3>
-      <p style="font-size:16px;color:#64748b;margin-bottom:16px">精确定位到 diff hunk 代码行</p>
+      <p style="font-size:16px;color:#64748b;margin-bottom:16px">精确定位到 diff hunk 代码行 — DiffParser 行号映射</p>
       <div style="background:#0b1120;border-radius:12px;padding:20px;font-family:monospace;font-size:15px">
         <div style="color:#f87171;margin-bottom:8px">🔴 <strong>Critical</strong>: SQL Injection Risk</div>
-        <div style="color:#cbd5e1;margin-bottom:8px">用户输入直接拼接到 SQL 查询中，攻击者可通过 name 参数注入任意 SQL。</div>
+        <div style="color:#cbd5e1;margin-bottom:8px">用户输入直接拼接到 SQL 查询中，攻击者可通过参数注入任意 SQL。</div>
         <div style="color:#4ade80;margin-bottom:4px">+ 建议修复:</div>
         <div style="color:#94a3b8">- query = "SELECT * FROM users WHERE name = '" + name + "'"</div>
         <div style="color:#94a3b8">+ query = "SELECT * FROM users WHERE name = ?"</div>
@@ -339,32 +320,32 @@ strong{color:#f1f5f9}
     </div>
     <div class="card">
       <h3>📊 总结报告</h3>
-      <p style="font-size:16px;color:#64748b;margin-bottom:16px">PR 对话评论，汇总分析结果</p>
+      <p style="font-size:16px;color:#64748b;margin-bottom:16px">PR 对话评论 — CommentCreator.build_summary_comment()</p>
       <div style="background:#0b1120;border-radius:12px;padding:20px;font-family:monospace;font-size:15px">
         <div style="color:#38bdf8;margin-bottom:8px;font-size:18px">## AI Review 总结</div>
-        <div style="color:#cbd5e1;margin-bottom:8px">本次变更新增用户搜索 API，共检测到 5 个问题。</div>
+        <div style="color:#cbd5e1;margin-bottom:8px">本次变更新增用户搜索 API，共检测到 14 个问题。</div>
         <div style="color:#cbd5e1;margin-bottom:4px">| 级别 | 数量 |</div>
         <div style="color:#cbd5e1;margin-bottom:4px">|------|------|</div>
-        <div style="color:#f87171;margin-bottom:4px">| 🔴 Critical | 2 |</div>
-        <div style="color:#fbbf24;margin-bottom:4px">| 🟠 Warning | 2 |</div>
-        <div style="color:#94a3b8;margin-bottom:8px">| ⚪ Suggestion | 1 |</div>
-        <div style="color:#64748b">> 查看完整报告: /reviews/42</div>
+        <div style="color:#f87171;margin-bottom:4px">| 🔴 Critical | 5 |</div>
+        <div style="color:#fbbf24;margin-bottom:4px">| 🟠 Warning | 7 |</div>
+        <div style="color:#94a3b8;margin-bottom:8px">| ⚪ Suggestion | 2 |</div>
+        <div style="color:#64748b">> 查看完整报告: Dashboard → /reviews/42</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ S9: Web Dashboard (KEY FEATURE - detailed) ═══════════ -->
+<!-- ═══════════ S9: Web Dashboard (KEY FEATURE) ═══════════ -->
 <div class="slide" id="s9">
   <h2>Web Dashboard</h2>
-  <p style="font-size:20px;color:#94a3b8;margin-bottom:28px">GitHub 原生界面无法提供的<em>跨仓库聚合视图</em> — 15 条 REST API + Jinja2 SSR + HTMX + Chart.js</p>
+  <p style="font-size:18px;color:#94a3b8;margin-bottom:28px">GitHub 原生界面无法提供的<em>跨仓库聚合视图</em> — Jinja2 SSR + HTMX + Chart.js + Alpine.js</p>
 
   <div class="g2">
     <div class="card">
       <div style="font-size:32px;margin-bottom:8px">📊</div>
       <h3>Dashboard 首页</h3>
       <p>总评审数 · 问题总数 · 严重问题 · 活跃仓库 — 4 张统计卡片</p>
-      <p style="font-size:16px;color:#38bdf8;margin-top:8px">Chart.js 环形图 + 柱状图，数据实时查询</p>
+      <p style="font-size:16px;color:#38bdf8;margin-top:8px">Chart.js 环形图 + 柱状图，数据来自 ReviewRecord/ReviewIssue 表</p>
     </div>
     <div class="card">
       <div style="font-size:32px;margin-bottom:8px">📈</div>
@@ -375,13 +356,13 @@ strong{color:#f1f5f9}
     <div class="card">
       <div style="font-size:32px;margin-bottom:8px">📋</div>
       <h3>评审记录管理</h3>
-      <p>分页列表 · 状态筛选 · 详情页 · Alpine.js 增强视图（文件分组+点击展开）</p>
-      <p style="font-size:16px;color:#38bdf8;margin-top:8px">PATCH 接口更新 issue 状态</p>
+      <p>分页列表 · 状态筛选 · 详情页 · Alpine.js 增强视图（文件分组+点击展开+修复建议）</p>
+      <p style="font-size:16px;color:#38bdf8;margin-top:8px">每个 finding 的详情来自 ReviewIssue 表</p>
     </div>
     <div class="card">
       <div style="font-size:32px;margin-bottom:8px">⚙️</div>
       <h3>仓库配置中心</h3>
-      <p>auto_review 开关 · 5 类检查勾选 · 灵敏度滑块 · 忽略规则列表</p>
+      <p>auto_review 开关 · 4 类检查勾选 · 灵敏度滑块 · glob 忽略规则列表</p>
       <p style="font-size:16px;color:#38bdf8;margin-top:8px">HTMX 表单即时保存，每仓库独立</p>
     </div>
   </div>
@@ -410,6 +391,7 @@ strong{color:#f1f5f9}
       <div class="card" style="margin-bottom:16px">
         <h3 style="color:#38bdf8">右侧：问题面板</h3>
         <p>按文件分组 · severity 颜色条 · 点击展开详情 · 修复建议 diff 格式</p>
+        <p style="font-size:16px;color:#64748b;margin-top:8px">数据来源：ReviewIssue 表（AutoReviewHandler 分析完成后写入）</p>
       </div>
       <div class="card">
         <h3 style="color:#38bdf8">配置文件忽略规则</h3>
@@ -420,7 +402,7 @@ strong{color:#f1f5f9}
   </div>
 </div>
 
-<!-- ═══════════ S11: False Positive Control (KEY FEATURE - detailed) ═══════════ -->
+<!-- ═══════════ S11: False Positive Control (KEY FEATURE) ═══════════ -->
 <div class="slide" id="s11">
   <h2>误报控制策略</h2>
   <p style="font-size:20px;color:#94a3b8;margin-bottom:32px">企业场景下，<em>误报比漏报更伤害信任</em>。过多低质量建议导致评审者忽略所有 AI 评论。</p>
@@ -510,10 +492,9 @@ strong{color:#f1f5f9}
     <span class="tag hl">Python 3.10+</span>
     <span class="tag hl">FastAPI</span>
     <span class="tag hl">SQLAlchemy 2.0</span>
-    <span class="tag hl">Alembic</span>
     <span class="tag hl">DeepSeek v4</span>
     <span class="tag hl">PyGithub</span>
-    <span class="tag hl">Docker</span>
+    <span class="tag hl">ngrok</span>
     <span class="tag hl">Chart.js</span>
     <span class="tag hl">HTMX</span>
     <span class="tag hl">Tailwind CSS</span>
@@ -608,12 +589,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'End') { e.preventDefault(); show(total-1); }
 });
 
-// Click to advance (but not on interactive elements)
 document.addEventListener('click', e => {
   if (e.target.tagName === 'BODY' || e.target.closest('.slide')) show(idx+1);
 });
 
-// Touch swipe for mobile
 let touchX = 0;
 document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
 document.addEventListener('touchend', e => {
