@@ -91,7 +91,7 @@ strong{color:#f1f5f9}
     </div>
     <div>
       <span class="tag hl">两阶段 AI 分析</span>
-      <span class="tag hl">9 条 AST 规则</span>
+      <span class="tag hl">16 条 AST 规则</span>
       <span class="tag hl">行级评论</span>
       <span class="tag hl">4 类检测</span>
       <span class="tag hl">跨仓库管理</span>
@@ -200,29 +200,45 @@ strong{color:#f1f5f9}
 <!-- ═══════════ S5: AST Rules (KEY FEATURE) ═══════════ -->
 <div class="slide" id="s5">
   <h2>AST 确定性规则引擎</h2>
-  <p style="font-size:20px;color:#94a3b8;margin-bottom:32px"><em>AI 有幻觉风险</em>，可能漏掉确定性安全问题。AST 用 Python <em>ast</em> 模块解析源码为语法树，<em>9 个 NodeVisitor</em> 遍历节点精确匹配。AST 做"有没有"的确定判断，AI 做"危不危险"的上下文判断，<strong>两者互补</strong>。</p>
+  <p style="font-size:18px;color:#94a3b8;margin-bottom:28px"><em>AI 有幻觉风险</em>，可能漏掉确定性安全问题。AST 用 Python <em>ast</em> + Java <em>javalang</em> 解析源码为语法树，<em>16 个规则</em>遍历节点精确匹配危险模式。AST 做"有没有"的确定判断，AI 做"危不危险"的上下文判断，<strong>两者互补</strong>。</p>
 
   <div class="split-row">
     <div class="col-left">
-      <h3 style="color:#38bdf8;font-size:24px;margin-bottom:16px">Python · 9 条规则</h3>
-      <table>
+      <h3 style="color:#38bdf8;font-size:21px;margin-bottom:10px">Python · 9 条规则</h3>
+      <table style="font-size:14px;margin-bottom:16px">
         <tr><th>规则</th><th>级别</th><th>类别</th></tr>
         <tr><td>exec / eval 动态执行</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
         <tr><td>pickle.loads() 反序列化</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
         <tr><td>subprocess shell=True</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
-        <tr><td>SQL 字符串拼接（f/+ 传给 .execute）</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
+        <tr><td>SQL 字符串拼接</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
         <tr><td>硬编码密钥/密码</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
         <tr><td>裸 except 无异常类型</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
         <tr><td>open() 无 with 语句</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
         <tr><td>圈复杂度 &gt; 15</td><td><span class="badge bg-amber">Warning</span></td><td>风格</td></tr>
         <tr><td>函数长度 &gt; 50 行</td><td><span class="badge bg-gray">Suggestion</span></td><td>风格</td></tr>
       </table>
+
+      <h3 style="color:#38bdf8;font-size:21px;margin-bottom:10px">Java · 7 条规则</h3>
+      <table style="font-size:14px">
+        <tr><th>规则</th><th>级别</th><th>类别</th></tr>
+        <tr><td>Runtime.exec() 命令注入</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
+        <tr><td>ObjectInputStream 反序列化</td><td><span class="badge bg-red">Critical</span></td><td>安全</td></tr>
+        <tr><td>SQL 字符串拼接</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
+        <tr><td>硬编码密钥/密码</td><td><span class="badge bg-amber">Warning</span></td><td>安全</td></tr>
+        <tr><td>资源未 try-with-resources</td><td><span class="badge bg-amber">Warning</span></td><td>最佳实践</td></tr>
+        <tr><td>圈复杂度 &gt; 10</td><td><span class="badge bg-amber">Warning</span></td><td>风格</td></tr>
+        <tr><td>方法长度 &gt; 50 行</td><td><span class="badge bg-gray">Suggestion</span></td><td>风格</td></tr>
+      </table>
     </div>
     <div class="col-right">
-      <h3 style="color:#38bdf8;font-size:24px;margin-bottom:16px">误报控制（内置于检测器）</h3>
+      <h3 style="color:#38bdf8;font-size:21px;margin-bottom:16px">误报控制（内置于检测器）</h3>
       <div class="step"><div class="step-num">1</div><div class="step-content"><h4>已知测试值过滤</h4><p>test_password / example_key / changeme 等不会触发硬编码密钥告警</p></div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>ORM 调用识别</h4><p>SQLAlchemy 的 execute() 参数化查询不会被误报为 SQL 注入</p></div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>安全上下文字段</h4><p>with open() 不会触发资源泄漏；不含 shell=True 的 subprocess 不会告警</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4>ORM / PreparedStatement 识别</h4><p>参数化查询不会被误报为 SQL 注入</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4>安全上下文字段</h4><p>with open() / try-with-resources 不触发资源泄漏；不含 shell=True 不告警</p></div></div>
+      <div style="margin-top:24px;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:14px;padding:20px;text-align:center">
+        <p style="font-size:18px;color:#e2e8f0"><strong>Python <em>ast</em> + Java <em>javalang</em></strong></p>
+        <p style="font-size:15px;color:#94a3b8;margin-top:4px">双语言 AST 引擎，共 16 条确定性规则</p>
+      </div>
     </div>
   </div>
 </div>
@@ -495,6 +511,7 @@ strong{color:#f1f5f9}
     <span class="tag hl">DeepSeek v4</span>
     <span class="tag hl">PyGithub</span>
     <span class="tag hl">ngrok</span>
+    <span class="tag hl">javalang</span>
     <span class="tag hl">Chart.js</span>
     <span class="tag hl">HTMX</span>
     <span class="tag hl">Tailwind CSS</span>

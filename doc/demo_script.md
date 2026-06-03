@@ -78,17 +78,23 @@ ReviewPilot 的解决思路很简单：用 AI 做第一轮全面初审，让人�
 
 **【切换到 Slide 5 — 重点详细讲】**
 
-除了 AI 分析，ReviewPilot 还内置了 AST 确定性规则引擎。
+除了 AI 分析，ReviewPilot 还内置了 AST 确定性规则引擎，覆盖 <strong>Python 和 Java</strong> 两种语言。
 
 为什么需要 AST？因为 AI 有幻觉风险——它可能漏掉确定性的安全问题，比如 SQL 注入对 AI 来说有时会判断为"这是测试代码所以没问题"。但 AST 做的是精确语法检测。
 
-具体实现是：用 Python 的 `ast` 模块把源码解析成抽象语法树，然后 9 个 NodeVisitor 规则依次遍历每个 AST 节点，精确匹配危险模式。
+具体实现是：Python 用 `ast` 标准库模块、Java 用 `javalang` 库把源码解析成抽象语法树，然后每个语言的 NodeVisitor 规则依次遍历各自 AST 节点，精确匹配危险模式。
 
 Python 共 9 条规则，按严重程度分三级：
 
 - **Critical**（3 条）：exec/eval 动态执行、pickle 不安全反序列化、subprocess 的 shell=True 命令注入。这些是直接代码执行漏洞。
 - **Warning**（5 条）：SQL 字符串拼接（检测 f-string、+、% 拼接传给 .execute() 的 SQL） 、硬编码密钥/密码（检测变量名含 password/secret/token 且赋值为字面量字符串）、裸 except（except 后面没跟异常类型）、文件操作没使用 with 语句、圈复杂度大于 15。
 - **Suggestion**（1 条）：函数超过 50 行。
+
+Java 共 7 条规则，同样按严重程度分三级：
+
+- **Critical**（2 条）：Runtime.exec() 命令注入、ObjectInputStream.readObject() 不安全反序列化。
+- **Warning**（4 条）：SQL 字符串拼接传给 executeQuery/executeUpdate、硬编码密钥/密码（检测变量名含 password/secret/token 且赋值为字面量）、资源未使用 try-with-resources（FileInputStream/Socket 等）、圈复杂度大于 10。
+- **Suggestion**（1 条）：方法超过 50 行。
 
 每条规则都有"不应触发"的测试用例。比如 ORM 的参数化查询不会被误报为 SQL 注入，测试代码中的 `test_password = "123"` 不会被报为硬编码密钥——因为 `_HardcodedSecretDetector` 会跳过这些已知测试值。
 
