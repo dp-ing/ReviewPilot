@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///reviewpilot.db"
 
+    # Proxy
+    HTTP_PROXY: str = ""
+    HTTPS_PROXY: str = ""
+
     # Server
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
