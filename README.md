@@ -1,10 +1,10 @@
 # ReviewPilot
 
-> **演示视频**：通过百度网盘分享的文件：七牛云代码评审演示视频.mp4
-> 链接：https://pan.baidu.com/s/1G4sNUPKreJ0pMbDBFjpe5g
+> **演示视频**：通过百度网盘分享的文件：七牛云代码评审演讲视频1-1.mp4
+> 链接：https://pan.baidu.com/s/1ahKqazmmqxmFiujhVCAdMA
 > 提取码：0000
 >
-> **备用链接**（简单云链）：https://easylink.cc/kek1om
+> **备用链接**（简单云链）：https://easylink.cc/ajrdfo
 
 AI 驱动的 GitHub PR 代码评审助手。自动分析 Pull Request 变更，通过 GitHub Bot 创建行级评论和总结报告，并提供 Web Dashboard 进行跨仓库管理。
 
