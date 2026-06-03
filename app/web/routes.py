@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.database import SessionLocal
+from app.models.pull_request import PullRequest
 from app.models.repo_config import RepoConfig
 from app.models.repository import Repository
 from app.models.review_issue import ReviewIssue
@@ -244,6 +245,13 @@ async def repositories_list(request: Request) -> HTMLResponse:
             )
             if config:
                 repo_configs[repo.id] = config
+            count = (
+                db.query(ReviewRecord)
+                .join(PullRequest, ReviewRecord.pull_request_id == PullRequest.id)
+                .filter(PullRequest.repository_id == repo.id)
+                .count()
+            )
+            review_counts[repo.id] = count
         return templates.TemplateResponse(
             request=request,
             name="repos/list.html",
