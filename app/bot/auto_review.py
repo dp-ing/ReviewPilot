@@ -68,11 +68,11 @@ class AutoReviewHandler:
             return self._execute_review(owner, repo, pr_number, event)
         except PRTooLargeError as exc:
             logger.warning("pr_too_large", owner=owner, repo=repo, pr=pr_number)
-            self._notify_pr_too_large(owner, repo, pr_number, str(exc))
+            self._notify_pr_too_large(owner, repo, pr_number, str(exc), event)
             return None
         except AIProviderError as exc:
             logger.error("ai_provider_error", error=str(exc))
-            self._notify_ai_error(owner, repo, pr_number)
+            self._notify_ai_error(owner, repo, pr_number, event)
             return None
         except GitHubAPIError as exc:
             logger.error("github_api_error", error=str(exc))
@@ -279,7 +279,8 @@ class AutoReviewHandler:
                 return val
             finally:
                 db.close()
-        except Exception:
+        except Exception as exc:
+            logger.warning("auto_review_config_check_failed", error=str(exc))
             return True  # Default to enabled on DB error
 
     def _create_review_record(
@@ -306,7 +307,8 @@ class AutoReviewHandler:
                 return record
             finally:
                 db.close()
-        except Exception:
+        except Exception as exc:
+            logger.error("create_review_record_failed", error=str(exc))
             return None
 
     def _update_review_record(
@@ -332,8 +334,8 @@ class AutoReviewHandler:
                 db.commit()
             finally:
                 db.close()
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error("update_review_record_failed", error=str(exc))
 
     def _save_findings(
         self,
@@ -358,6 +360,7 @@ class AutoReviewHandler:
                         title=f.title,
                         description=f.description,
                         suggestion=f.suggestion,
+                        suggestion_diff=f.suggestion_diff,
                         confidence=f.confidence,
                         source=f.source,
                     )
@@ -365,8 +368,8 @@ class AutoReviewHandler:
                 db.commit()
             finally:
                 db.close()
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error("save_findings_failed", error=str(exc))
 
     @staticmethod
     def _build_diff_text(pr_files: list[Any]) -> str:
@@ -381,11 +384,12 @@ class AutoReviewHandler:
         return "\n".join(parts)
 
     def _notify_pr_too_large(
-        self, owner: str, repo: str, pr_number: int, message: str
+        self, owner: str, repo: str, pr_number: int, message: str, event: BaseWebhookEvent
     ) -> None:
         """Post a comment about PR being too large."""
         try:
-            client = self._client_factory(0)
+            installation_id = self._extract_installation_id(event)
+            client = self._client_factory(installation_id)
             client.create_issue_comment(
                 owner, repo, pr_number,
                 f":warning: **PR too large for automatic review**\n\n{message}",
@@ -394,11 +398,12 @@ class AutoReviewHandler:
             pass
 
     def _notify_ai_error(
-        self, owner: str, repo: str, pr_number: int
+        self, owner: str, repo: str, pr_number: int, event: BaseWebhookEvent
     ) -> None:
         """Post a comment about AI service degradation."""
         try:
-            client = self._client_factory(0)
+            installation_id = self._extract_installation_id(event)
+            client = self._client_factory(installation_id)
             client.create_issue_comment(
                 owner, repo, pr_number,
                 ":warning: **AI analysis service is currently degraded.** "

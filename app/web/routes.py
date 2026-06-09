@@ -206,7 +206,8 @@ async def update_issue_status(
     review_id: int,
     issue_id: int,
 ) -> JSONResponse:
-    """HTMX endpoint: toggle issue status."""
+    """HTMX endpoint: toggle issue resolved status."""
+    import json
     db = SessionLocal()
     try:
         issue = (
@@ -218,7 +219,19 @@ async def update_issue_status(
         if issue is None:
             return JSONResponse({"error": "Not Found"}, status_code=404)
 
-        return JSONResponse({"id": issue.id, "status": "ok"})
+        body = await request.body()
+        try:
+            data = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            data = {}
+        resolved = data.get("resolved", not issue.resolved)
+        issue.resolved = resolved  # type: ignore[attr-defined]
+        db.commit()
+
+        return JSONResponse({
+            "id": issue.id,
+            "resolved": issue.resolved,  # type: ignore[attr-defined]
+        })
     finally:
         db.close()
 
@@ -303,12 +316,19 @@ async def repo_config_page(
 
 
 @router.put("/api/repositories/{repo_id}/config")
+@router.post("/api/repositories/{repo_id}/config")
 async def save_repo_config(
     request: Request,
     repo_id: int,
 ) -> HTMLResponse:
     """HTMX endpoint: save repository configuration."""
-    form_data: Any = await request.form()
+    try:
+        form_data: Any = await request.form()
+    except Exception:
+        return HTMLResponse(
+            '<span class="text-red-600">✗ 表单数据解析失败</span>', status_code=400
+        )
+
     auto_review = form_data.get("auto_review") == "1"
     sensitivity_str = str(form_data.get("sensitivity", "medium"))
     sensitivity_map: dict[str, float] = {"low": 0.9, "medium": 0.7, "high": 0.6}
@@ -344,6 +364,10 @@ async def save_repo_config(
         db.commit()
         return HTMLResponse(
             '<span class="text-green-600">✓ 配置已保存</span>'
+        )
+    except Exception as e:
+        return HTMLResponse(
+            f'<span class="text-red-600">✗ 保存失败: {e}</span>', status_code=500
         )
     finally:
         db.close()

@@ -35,6 +35,7 @@ class EngineFinding:
     title: str
     description: str
     suggestion: str = ""
+    suggestion_diff: Optional[dict[str, str]] = None
     confidence: float = 0.0
     source: str = "ai"  # "ai" or "ast"
 

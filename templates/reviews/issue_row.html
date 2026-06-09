@@ -1,6 +1,7 @@
 {# issue_row.html — single issue row with HTMX status toggle #}
 <div class="px-6 py-4 flex items-start gap-4" id="issue-{{ issue.id }}">
     <div class="flex-shrink-0 mt-0.5">
+        {% set severity = issue.severity %}
         {% include "shared/severity_badge.html" with context %}
     </div>
     <div class="flex-1 min-w-0">
